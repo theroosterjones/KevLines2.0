@@ -1,0 +1,82 @@
+import Foundation
+import simd
+
+/// Ported from pose_analyzer.py.
+/// Tracks elbow angle, shoulder angle, extended forearm line.
+final class LatPulldownAnalyzer: ExerciseAnalyzer {
+
+    let exerciseType: ExerciseType = .latPulldown
+    let side: BodySide
+
+    var requiredLandmarks: [PoseLandmarkType] {
+        [.shoulder(side), .elbow(side), .wrist(side), .hip(side)]
+    }
+
+    private let smoother = LandmarkSmoother(alpha: 0.7)
+    private let repCounter = RepCounter(extendedThreshold: 150, flexedThreshold: 90)
+    private let tempoTracker = TempoTracker()
+
+    init(side: BodySide) {
+        self.side = side
+    }
+
+    func analyze(landmarks: PoseResult) -> FrameAnalysis {
+        guard let rawShoulder = landmarks.position(for: .shoulder(side)),
+              let rawElbow    = landmarks.position(for: .elbow(side)),
+              let rawWrist    = landmarks.position(for: .wrist(side)),
+              let rawHip      = landmarks.position(for: .hip(side)) else {
+            return .empty
+        }
+
+        let shoulder = smoother.smooth(key: "\(side)_shoulder", position: rawShoulder)
+        let elbow    = smoother.smooth(key: "\(side)_elbow", position: rawElbow)
+        let wrist    = smoother.smooth(key: "\(side)_wrist", position: rawWrist)
+        let hip      = smoother.smooth(key: "\(side)_hip", position: rawHip)
+
+        let elbowAngle    = AngleCalculator.angle(a: shoulder, b: elbow, c: wrist)
+        let shoulderAngle = AngleCalculator.angle(a: hip, b: shoulder, c: elbow)
+
+        repCounter.update(angle: elbowAngle)
+
+        var instructions: [OverlayInstruction] = []
+
+        // Extended forearm line
+        instructions.append(.extendedLine(from: wrist, through: elbow, color: .cyan, width: 2))
+
+        // Arm skeleton
+        instructions.append(.line(from: shoulder, to: elbow, color: .yellow, width: 3))
+        instructions.append(.line(from: elbow, to: wrist, color: .yellow, width: 3))
+        instructions.append(.line(from: hip, to: shoulder, color: .green, width: 2))
+
+        // Key joints
+        instructions.append(.circle(at: elbow, radius: 10, color: .red, filled: true))
+        instructions.append(.circle(at: shoulder, radius: 10, color: .red, filled: true))
+
+        // Angle labels
+        instructions.append(.text("Elbow: \(Int(elbowAngle))",
+            at: SIMD2(elbow.x - 0.05, elbow.y + 0.05), color: .white, size: 20))
+        instructions.append(.text("Shoulder: \(Int(shoulderAngle))",
+            at: SIMD2(shoulder.x - 0.05, shoulder.y - 0.03), color: .white, size: 20))
+
+        // HUD
+        instructions.append(.text("Reps: \(repCounter.count)",
+            at: SIMD2(0.02, 0.05), color: .white, size: 24))
+
+        return FrameAnalysis(
+            angles: [
+                JointAngle(joint: .elbow, degrees: elbowAngle),
+                JointAngle(joint: .shoulder, degrees: shoulderAngle)
+            ],
+            repCount: repCounter.count,
+            repState: repCounter.state,
+            tempoPhase: tempoTracker.update(angle: elbowAngle, time: .zero),
+            overlayInstructions: instructions
+        )
+    }
+
+    func reset() {
+        smoother.reset()
+        repCounter.reset()
+        tempoTracker.reset()
+    }
+}
