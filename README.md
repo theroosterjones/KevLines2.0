@@ -60,7 +60,7 @@ KevLines 1.x ([repository](https://github.com/theroosterjones/KevLines)) used a 
 
 ```
 KevLines2.0/
-├── KevLines2.0/
+├── Sources/
 │   ├── App/
 │   │   ├── KevLines2App.swift              # @main entry point
 │   │   └── ContentView.swift               # Tab navigation
@@ -92,18 +92,20 @@ KevLines2.0/
 │   │   ├── ExerciseView.swift               # Video selection + local analysis
 │   │   ├── WorkoutHistoryView.swift
 │   │   └── SettingsView.swift
-│   └── Models/
-│       ├── Exercise.swift                   # ExerciseConfig + factory
-│       └── AnalysisConfig.swift             # Tunable thresholds
+│   ├── Models/
+│   │   ├── Exercise.swift                   # ExerciseConfig + factory
+│   │   └── AnalysisConfig.swift             # Tunable thresholds
+│   └── pose_landmarker_full.task            # MediaPipe model (bundle resource)
+├── Tests/
+│   ├── AngleCalculatorTests.swift
+│   └── RepCounterTests.swift
 ├── PythonReference/                          # Original Python analyzers (read-only reference)
 │   ├── row_analyzer.py
 │   ├── backsquat_analyzer.py
 │   ├── hacksquat_analyzer.py
 │   ├── pose_analyzer.py
 │   └── app.py
-├── KevLines2.0Tests/
-│   ├── AngleCalculatorTests.swift
-│   └── RepCounterTests.swift
+├── project.yml                              # XcodeGen spec
 └── README.md
 ```
 
@@ -124,17 +126,17 @@ git clone https://github.com/theroosterjones/KevLines2.0.git
 cd KevLines2.0
 
 # Download the MediaPipe pose model
-curl -L -o KevLines2.0/pose_landmarker_full.task \
+curl -L -o Sources/pose_landmarker_full.task \
   https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task
+
+# Generate the Xcode project (requires xcodegen: brew install xcodegen)
+xcodegen generate
 
 # Open in Xcode
 open KevLines2.0.xcodeproj
 ```
 
-Then in Xcode:
-1. Add the MediaPipe Swift package: `https://github.com/google/mediapipe.git` (select `MediaPipeTasksVision`)
-2. Add `pose_landmarker_full.task` to the target's bundle resources
-3. Build and run
+The SPM dependency ([SwiftTasksVision](https://github.com/paescebu/SwiftTasksVision)) and model bundling are already configured in `project.yml`. Just build and run.
 
 ## Tech Stack
 
@@ -169,8 +171,8 @@ Then in Xcode:
 
 ## Roadmap
 
-- [ ] Wire up MediaPipe iOS SDK (uncomment `PoseLandmarkerService`)
-- [ ] Create Xcode project with SPM dependency
+- [x] Wire up MediaPipe iOS SDK (uncomment `PoseLandmarkerService`)
+- [x] Create Xcode project with SPM dependency
 - [ ] Live camera analysis (real-time overlay via Metal)
 - [ ] SwiftData persistence for workout history
 - [ ] 3D angle calculations using MediaPipe world landmarks

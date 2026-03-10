@@ -1,0 +1,48 @@
+name: KevLines2.0
+options:
+  bundleIdPrefix: com.kevinjones
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "15.0"
+  generateEmptyDirectories: false
+
+packages:
+  SwiftTasksVision:
+    url: https://github.com/paescebu/SwiftTasksVision.git
+    from: "0.10.14"
+
+targets:
+  KevLines2.0:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kevinjones.KevLines2-0
+        PRODUCT_NAME: KevLines2.0
+        PRODUCT_MODULE_NAME: KevLines2_0
+        MARKETING_VERSION: "2.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.9"
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "KevLines needs access to your photo library to select exercise videos for analysis."
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        GENERATE_INFOPLIST_FILE: true
+    dependencies:
+      - package: SwiftTasksVision
+        product: SwiftTasksVision
+
+  KevLines2.0Tests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kevinjones.KevLines2-0Tests
+        SWIFT_VERSION: "5.9"
+        GENERATE_INFOPLIST_FILE: true
+    dependencies:
+      - target: KevLines2.0
