@@ -9,6 +9,8 @@ enum ExerciseType: String, CaseIterable, Identifiable, Codable {
     case hackSquat = "Hack Squat"
     case latPulldown = "Lat Pulldown"
     case squat = "Squat"
+    case elbowCurl = "Elbow (Bicep/Tricep)"
+    case shoulderAssessment = "Shoulder Assessment"
 
     var id: String { rawValue }
 }

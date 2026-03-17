@@ -1,0 +1,628 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		08FF4A46B616A7DC7068D318 /* KevLines2App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E8D7227809F7AAC2B6B978E /* KevLines2App.swift */; };
+		0C5A8863E20521F594D38D54 /* ExerciseAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E7DC1A7735FA6E24AB4D899 /* ExerciseAnalyzer.swift */; };
+		0F00F94AE5909EC5BD56C989 /* VideoReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF04D86E9DDDDE63553BD0FB /* VideoReader.swift */; };
+		12BCD0356FB1F3BDE689AE3B /* LandmarkTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88448A5595A3EB580ECAFBA6 /* LandmarkTypes.swift */; };
+		272606963B330964D1E509AF /* SwiftTasksVision in Frameworks */ = {isa = PBXBuildFile; productRef = 54928F3BD3ACD68279D94079 /* SwiftTasksVision */; };
+		310F8D531E819EC7A8F4B2EB /* PoseLandmarkerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90354545ABE21C88DD4714B /* PoseLandmarkerService.swift */; };
+		368F8B4B3CE5623DE0C8F7E8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF385D837369DDE56870A09 /* ContentView.swift */; };
+		44EF9932C903352D7B964F7B /* AnalysisConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFDAC2985FB10E765DEAB22 /* AnalysisConfig.swift */; };
+		5BAA42F546449919B37BF023 /* RepCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F7E10E18A69E886D996337 /* RepCounter.swift */; };
+		5D8F1169C478F4C319088C41 /* SquatAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98BE6C60BC3535F0EEF561C2 /* SquatAnalyzer.swift */; };
+		7B323D5E3F433509330EDECC /* AnalysisResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18DBB0119D5FAB1C9AE07B9C /* AnalysisResult.swift */; };
+		7F47A83A070078FD96D016E2 /* AngleCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 105AC656796E7FFED70AEAC7 /* AngleCalculatorTests.swift */; };
+		8C18ACCDE58113701AB86BBF /* BackSquatAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01113D3D83B13D1ECBB10CB0 /* BackSquatAnalyzer.swift */; };
+		8CABC4582C972316F63F0B28 /* RepCounterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19A58E5F0BF0916EF41F84CD /* RepCounterTests.swift */; };
+		980672AFD0948CE929B55E0D /* TempoTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F155EB38F803275CC0AF70D /* TempoTracker.swift */; };
+		A36F3EEE313DDC2F92CF156B /* RowAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAB6C3ABA6C589A5A6AC5DCF /* RowAnalyzer.swift */; };
+		AD8F372A84B695232C46E01E /* LandmarkSmoother.swift in Sources */ = {isa = PBXBuildFile; fileRef = 776A9C2FB7F6F4108B6790F4 /* LandmarkSmoother.swift */; };
+		B05300B5846CD89AAE55C9D5 /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD774CC33747AEBBC54D54C /* VideoProcessor.swift */; };
+		C65365314CC643DD871ADD8D /* ExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA949C722622B3B489370A7A /* ExerciseView.swift */; };
+		C7A7FF839004D241B75CE903 /* pose_landmarker_full.task in Resources */ = {isa = PBXBuildFile; fileRef = A376ABE354BD8457CEB30C65 /* pose_landmarker_full.task */; };
+		D3EBDFA85E87B597ACB0EC31 /* LatPulldownAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C32D18EB4D8B9453C9BF056 /* LatPulldownAnalyzer.swift */; };
+		D41146EFA02918150060AE63 /* OverlayRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7DA897E91B1C74218C6829D /* OverlayRenderer.swift */; };
+		D839E7CE68CFEBFB4409F0FF /* WorkoutHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8293F702B27BE46ECC67C9B8 /* WorkoutHistoryView.swift */; };
+		E2AA48296C66E90780C69385 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6C64676AD75EB35930986B /* SettingsView.swift */; };
+		E9BA01B36BADEFCA69B7677D /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC19F3EC3EFC6E5979BF922 /* Exercise.swift */; };
+		EC87AFBD927891BEBFADB7C1 /* VideoWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34F4A8435089BEE7F977723B /* VideoWriter.swift */; };
+		F44B276E7DA3981B52B733F3 /* AngleCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853287EEA68FF7813F005490 /* AngleCalculator.swift */; };
+		FA2AAD41C881090208FF2A02 /* HackSquatAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9A0BCE718F087BC7F47130 /* HackSquatAnalyzer.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5C8D78EE811B9C7C25BC04D6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7D7650C0E7854AFFA287CA87 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D0E8B214E17828C3F3A5A6D;
+			remoteInfo = KevLines2.0;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		01113D3D83B13D1ECBB10CB0 /* BackSquatAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackSquatAnalyzer.swift; sourceTree = "<group>"; };
+		105AC656796E7FFED70AEAC7 /* AngleCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AngleCalculatorTests.swift; sourceTree = "<group>"; };
+		18DBB0119D5FAB1C9AE07B9C /* AnalysisResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisResult.swift; sourceTree = "<group>"; };
+		19A58E5F0BF0916EF41F84CD /* RepCounterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepCounterTests.swift; sourceTree = "<group>"; };
+		34F4A8435089BEE7F977723B /* VideoWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoWriter.swift; sourceTree = "<group>"; };
+		3CFDAC2985FB10E765DEAB22 /* AnalysisConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisConfig.swift; sourceTree = "<group>"; };
+		5AD774CC33747AEBBC54D54C /* VideoProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoProcessor.swift; sourceTree = "<group>"; };
+		6A9A0BCE718F087BC7F47130 /* HackSquatAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HackSquatAnalyzer.swift; sourceTree = "<group>"; };
+		6E6C64676AD75EB35930986B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		776A9C2FB7F6F4108B6790F4 /* LandmarkSmoother.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandmarkSmoother.swift; sourceTree = "<group>"; };
+		7C32D18EB4D8B9453C9BF056 /* LatPulldownAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatPulldownAnalyzer.swift; sourceTree = "<group>"; };
+		7E8D7227809F7AAC2B6B978E /* KevLines2App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KevLines2App.swift; sourceTree = "<group>"; };
+		8293F702B27BE46ECC67C9B8 /* WorkoutHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutHistoryView.swift; sourceTree = "<group>"; };
+		853287EEA68FF7813F005490 /* AngleCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AngleCalculator.swift; sourceTree = "<group>"; };
+		88448A5595A3EB580ECAFBA6 /* LandmarkTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandmarkTypes.swift; sourceTree = "<group>"; };
+		98BE6C60BC3535F0EEF561C2 /* SquatAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SquatAnalyzer.swift; sourceTree = "<group>"; };
+		9E7DC1A7735FA6E24AB4D899 /* ExerciseAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseAnalyzer.swift; sourceTree = "<group>"; };
+		9F155EB38F803275CC0AF70D /* TempoTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoTracker.swift; sourceTree = "<group>"; };
+		A376ABE354BD8457CEB30C65 /* pose_landmarker_full.task */ = {isa = PBXFileReference; lastKnownFileType = file; path = pose_landmarker_full.task; sourceTree = "<group>"; };
+		A6399B585A07C22BB7EDD5B7 /* KevLines2.0.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KevLines2.0.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A90354545ABE21C88DD4714B /* PoseLandmarkerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoseLandmarkerService.swift; sourceTree = "<group>"; };
+		AA949C722622B3B489370A7A /* ExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseView.swift; sourceTree = "<group>"; };
+		AAC19F3EC3EFC6E5979BF922 /* Exercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exercise.swift; sourceTree = "<group>"; };
+		B1F7E10E18A69E886D996337 /* RepCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepCounter.swift; sourceTree = "<group>"; };
+		CAB6C3ABA6C589A5A6AC5DCF /* RowAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowAnalyzer.swift; sourceTree = "<group>"; };
+		D7DA897E91B1C74218C6829D /* OverlayRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayRenderer.swift; sourceTree = "<group>"; };
+		DB9637BD9203004FE7F44DFE /* KevLines2.0Tests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KevLines2.0Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DF04D86E9DDDDE63553BD0FB /* VideoReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoReader.swift; sourceTree = "<group>"; };
+		FCF385D837369DDE56870A09 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C5B2DFFC7B9D329F2BDF3D32 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				272606963B330964D1E509AF /* SwiftTasksVision in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		07F9717AC030995A5B88040C /* Analyzers */ = {
+			isa = PBXGroup;
+			children = (
+				01113D3D83B13D1ECBB10CB0 /* BackSquatAnalyzer.swift */,
+				6A9A0BCE718F087BC7F47130 /* HackSquatAnalyzer.swift */,
+				7C32D18EB4D8B9453C9BF056 /* LatPulldownAnalyzer.swift */,
+				CAB6C3ABA6C589A5A6AC5DCF /* RowAnalyzer.swift */,
+				98BE6C60BC3535F0EEF561C2 /* SquatAnalyzer.swift */,
+			);
+			path = Analyzers;
+			sourceTree = "<group>";
+		};
+		0DC43D6277B42B0292D45541 /* Overlay */ = {
+			isa = PBXGroup;
+			children = (
+				D7DA897E91B1C74218C6829D /* OverlayRenderer.swift */,
+			);
+			path = Overlay;
+			sourceTree = "<group>";
+		};
+		33402AECDD278EEE5101CA07 = {
+			isa = PBXGroup;
+			children = (
+				E788CE3E2B97041AF4B393B3 /* Sources */,
+				F09ADF5F11BDA0BA4683F5E0 /* Tests */,
+				EC7E7AF2BF0D803A628742EA /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3B16FBD6B68F80FCCEF88AA6 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				D8E8EDC85818938E110AA90E /* Math */,
+				55D727F99B1D0D5BBF966CEB /* Pose */,
+				CEDF96B20D0A9F6E60784DC7 /* Video */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		55D727F99B1D0D5BBF966CEB /* Pose */ = {
+			isa = PBXGroup;
+			children = (
+				88448A5595A3EB580ECAFBA6 /* LandmarkTypes.swift */,
+				A90354545ABE21C88DD4714B /* PoseLandmarkerService.swift */,
+			);
+			path = Pose;
+			sourceTree = "<group>";
+		};
+		6B5C1FF00972790662E07941 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AA949C722622B3B489370A7A /* ExerciseView.swift */,
+				6E6C64676AD75EB35930986B /* SettingsView.swift */,
+				8293F702B27BE46ECC67C9B8 /* WorkoutHistoryView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		BAF0C149FE6051822C336AE9 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				3CFDAC2985FB10E765DEAB22 /* AnalysisConfig.swift */,
+				AAC19F3EC3EFC6E5979BF922 /* Exercise.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		BD4CB0741577788C5597CB63 /* Analysis */ = {
+			isa = PBXGroup;
+			children = (
+				18DBB0119D5FAB1C9AE07B9C /* AnalysisResult.swift */,
+				9E7DC1A7735FA6E24AB4D899 /* ExerciseAnalyzer.swift */,
+				B1F7E10E18A69E886D996337 /* RepCounter.swift */,
+				9F155EB38F803275CC0AF70D /* TempoTracker.swift */,
+				07F9717AC030995A5B88040C /* Analyzers */,
+			);
+			path = Analysis;
+			sourceTree = "<group>";
+		};
+		CEDF96B20D0A9F6E60784DC7 /* Video */ = {
+			isa = PBXGroup;
+			children = (
+				5AD774CC33747AEBBC54D54C /* VideoProcessor.swift */,
+				DF04D86E9DDDDE63553BD0FB /* VideoReader.swift */,
+				34F4A8435089BEE7F977723B /* VideoWriter.swift */,
+			);
+			path = Video;
+			sourceTree = "<group>";
+		};
+		D8E8EDC85818938E110AA90E /* Math */ = {
+			isa = PBXGroup;
+			children = (
+				853287EEA68FF7813F005490 /* AngleCalculator.swift */,
+				776A9C2FB7F6F4108B6790F4 /* LandmarkSmoother.swift */,
+			);
+			path = Math;
+			sourceTree = "<group>";
+		};
+		E788CE3E2B97041AF4B393B3 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				A376ABE354BD8457CEB30C65 /* pose_landmarker_full.task */,
+				BD4CB0741577788C5597CB63 /* Analysis */,
+				F45FCF336FBE9E09DEE32820 /* App */,
+				3B16FBD6B68F80FCCEF88AA6 /* Core */,
+				BAF0C149FE6051822C336AE9 /* Models */,
+				0DC43D6277B42B0292D45541 /* Overlay */,
+				6B5C1FF00972790662E07941 /* Views */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		EC7E7AF2BF0D803A628742EA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A6399B585A07C22BB7EDD5B7 /* KevLines2.0.app */,
+				DB9637BD9203004FE7F44DFE /* KevLines2.0Tests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F09ADF5F11BDA0BA4683F5E0 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				105AC656796E7FFED70AEAC7 /* AngleCalculatorTests.swift */,
+				19A58E5F0BF0916EF41F84CD /* RepCounterTests.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		F45FCF336FBE9E09DEE32820 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				FCF385D837369DDE56870A09 /* ContentView.swift */,
+				7E8D7227809F7AAC2B6B978E /* KevLines2App.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4B8A7745CAF0313B16040010 /* KevLines2.0Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 712CE780A9E60609A62F9B08 /* Build configuration list for PBXNativeTarget "KevLines2.0Tests" */;
+			buildPhases = (
+				DD73EFD5AC087A177FEE55AF /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6B7E8E6E6A64B7EC24F2A7C3 /* PBXTargetDependency */,
+			);
+			name = KevLines2.0Tests;
+			packageProductDependencies = (
+			);
+			productName = KevLines2.0Tests;
+			productReference = DB9637BD9203004FE7F44DFE /* KevLines2.0Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		4D0E8B214E17828C3F3A5A6D /* KevLines2.0 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB960B61B54C71B56A09C625 /* Build configuration list for PBXNativeTarget "KevLines2.0" */;
+			buildPhases = (
+				B5D9B8087060107FF6239B0C /* Sources */,
+				3A643E731FD86F218BB34D24 /* Resources */,
+				C5B2DFFC7B9D329F2BDF3D32 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KevLines2.0;
+			packageProductDependencies = (
+				54928F3BD3ACD68279D94079 /* SwiftTasksVision */,
+			);
+			productName = KevLines2.0;
+			productReference = A6399B585A07C22BB7EDD5B7 /* KevLines2.0.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7D7650C0E7854AFFA287CA87 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = 399DE41446C632310A446ACC /* Build configuration list for PBXProject "KevLines2.0" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 33402AECDD278EEE5101CA07;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				AB6C192517089A493B49ECD9 /* XCRemoteSwiftPackageReference "SwiftTasksVision" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = EC7E7AF2BF0D803A628742EA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4D0E8B214E17828C3F3A5A6D /* KevLines2.0 */,
+				4B8A7745CAF0313B16040010 /* KevLines2.0Tests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3A643E731FD86F218BB34D24 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C7A7FF839004D241B75CE903 /* pose_landmarker_full.task in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B5D9B8087060107FF6239B0C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				44EF9932C903352D7B964F7B /* AnalysisConfig.swift in Sources */,
+				7B323D5E3F433509330EDECC /* AnalysisResult.swift in Sources */,
+				F44B276E7DA3981B52B733F3 /* AngleCalculator.swift in Sources */,
+				8C18ACCDE58113701AB86BBF /* BackSquatAnalyzer.swift in Sources */,
+				368F8B4B3CE5623DE0C8F7E8 /* ContentView.swift in Sources */,
+				E9BA01B36BADEFCA69B7677D /* Exercise.swift in Sources */,
+				0C5A8863E20521F594D38D54 /* ExerciseAnalyzer.swift in Sources */,
+				C65365314CC643DD871ADD8D /* ExerciseView.swift in Sources */,
+				FA2AAD41C881090208FF2A02 /* HackSquatAnalyzer.swift in Sources */,
+				08FF4A46B616A7DC7068D318 /* KevLines2App.swift in Sources */,
+				AD8F372A84B695232C46E01E /* LandmarkSmoother.swift in Sources */,
+				12BCD0356FB1F3BDE689AE3B /* LandmarkTypes.swift in Sources */,
+				D3EBDFA85E87B597ACB0EC31 /* LatPulldownAnalyzer.swift in Sources */,
+				D41146EFA02918150060AE63 /* OverlayRenderer.swift in Sources */,
+				310F8D531E819EC7A8F4B2EB /* PoseLandmarkerService.swift in Sources */,
+				5BAA42F546449919B37BF023 /* RepCounter.swift in Sources */,
+				A36F3EEE313DDC2F92CF156B /* RowAnalyzer.swift in Sources */,
+				E2AA48296C66E90780C69385 /* SettingsView.swift in Sources */,
+				5D8F1169C478F4C319088C41 /* SquatAnalyzer.swift in Sources */,
+				980672AFD0948CE929B55E0D /* TempoTracker.swift in Sources */,
+				B05300B5846CD89AAE55C9D5 /* VideoProcessor.swift in Sources */,
+				0F00F94AE5909EC5BD56C989 /* VideoReader.swift in Sources */,
+				EC87AFBD927891BEBFADB7C1 /* VideoWriter.swift in Sources */,
+				D839E7CE68CFEBFB4409F0FF /* WorkoutHistoryView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DD73EFD5AC087A177FEE55AF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7F47A83A070078FD96D016E2 /* AngleCalculatorTests.swift in Sources */,
+				8CABC4582C972316F63F0B28 /* RepCounterTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6B7E8E6E6A64B7EC24F2A7C3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4D0E8B214E17828C3F3A5A6D /* KevLines2.0 */;
+			targetProxy = 5C8D78EE811B9C7C25BC04D6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0B993F64DE701CBE5D82883C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YCKQ2HTCQ3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "KevLines needs access to your photo library to select exercise videos for analysis.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.kevinjones.KevLines2-0";
+				PRODUCT_MODULE_NAME = KevLines2_0;
+				PRODUCT_NAME = KevLines2.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		96C613A2827BAADB7D88F0E0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		9B49997F008048F149186BB2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.kevinjones.KevLines2-0Tests";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KevLines2.0.app/KevLines2.0";
+			};
+			name = Debug;
+		};
+		CED3FE8135116EA4B0575C25 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E66095FB4B14F2492E49EDC5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.kevinjones.KevLines2-0Tests";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KevLines2.0.app/KevLines2.0";
+			};
+			name = Release;
+		};
+		FAB953EB8627337E88F0331D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YCKQ2HTCQ3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "KevLines needs access to your photo library to select exercise videos for analysis.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.kevinjones.KevLines2-0";
+				PRODUCT_MODULE_NAME = KevLines2_0;
+				PRODUCT_NAME = KevLines2.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		399DE41446C632310A446ACC /* Build configuration list for PBXProject "KevLines2.0" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CED3FE8135116EA4B0575C25 /* Debug */,
+				96C613A2827BAADB7D88F0E0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		712CE780A9E60609A62F9B08 /* Build configuration list for PBXNativeTarget "KevLines2.0Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9B49997F008048F149186BB2 /* Debug */,
+				E66095FB4B14F2492E49EDC5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AB960B61B54C71B56A09C625 /* Build configuration list for PBXNativeTarget "KevLines2.0" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FAB953EB8627337E88F0331D /* Debug */,
+				0B993F64DE701CBE5D82883C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AB6C192517089A493B49ECD9 /* XCRemoteSwiftPackageReference "SwiftTasksVision" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/paescebu/SwiftTasksVision.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.10.14;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		54928F3BD3ACD68279D94079 /* SwiftTasksVision */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB6C192517089A493B49ECD9 /* XCRemoteSwiftPackageReference "SwiftTasksVision" */;
+			productName = SwiftTasksVision;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 7D7650C0E7854AFFA287CA87 /* Project object */;
+}

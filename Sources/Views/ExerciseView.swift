@@ -84,13 +84,16 @@ struct ExerciseView: View {
         .padding(.horizontal)
     }
 
+    @ViewBuilder
     private var sidePicker: some View {
-        Picker("Side", selection: $selectedSide) {
-            Text("Left").tag(BodySide.left)
-            Text("Right").tag(BodySide.right)
+        if selectedExercise.requiresSideSelection {
+            Picker("Side", selection: $selectedSide) {
+                Text("Left").tag(BodySide.left)
+                Text("Right").tag(BodySide.right)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
         }
-        .pickerStyle(.segmented)
-        .padding(.horizontal)
     }
 
     private var videoPickerButton: some View {
@@ -162,10 +165,26 @@ struct ExerciseView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Results")
                     .font(.headline)
-                Text("Reps: \(summary.totalReps)")
+
+                if selectedExerciseType == .shoulderAssessment {
+                    // Shoulder assessment: show tilt interpretation instead of rep count
+                    if let tilt = summary.averageAngles.first(where: { $0.joint == .shoulder }) {
+                        let absTilt = abs(tilt.degrees)
+                        let side = tilt.degrees >= 0 ? "Left" : "Right"
+                        Text("\(side) shoulder elevated  \(String(format: "%.1f", absTilt))° avg")
+                    }
+                } else {
+                    Text("Reps: \(summary.totalReps)")
+                }
+
                 Text("Duration: \(String(format: "%.1f", summary.duration))s")
+
                 ForEach(summary.averageAngles, id: \.joint) { angle in
-                    Text("Avg \(angle.joint.rawValue): \(Int(angle.degrees))°")
+                    if selectedExerciseType == .shoulderAssessment, angle.joint == .shoulder {
+                        // Already shown above in interpreted form; skip raw line
+                    } else {
+                        Text("Avg \(angle.joint.rawValue): \(Int(angle.degrees))\u{00B0}")
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
