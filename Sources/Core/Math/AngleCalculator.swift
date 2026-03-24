@@ -19,7 +19,7 @@ struct AngleCalculator {
         let v1 = simd_normalize(a - b)
         let v2 = simd_normalize(c - b)
         // Clamp to [-1, 1] to guard against floating-point drift past the acos domain
-        let cosTheta = simd_dot(v1, v2).clamped(to: -1...1)
+        let cosTheta = max(-1.0, min(1.0, simd_dot(v1, v2)))
         return acos(cosTheta) * 180.0 / .pi
     }
 
