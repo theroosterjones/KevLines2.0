@@ -16,7 +16,7 @@ final class ShoulderAnalyzer: ExerciseAnalyzer {
         [.shoulder(.left), .shoulder(.right), .hip(.left), .hip(.right)]
     }
 
-    private let smoother = LandmarkSmoother(alpha: 0.7)
+    private let smoother = LandmarkSmoother()
 
     init(side: BodySide) {
         // side parameter ignored — this analyzer always uses both sides
@@ -30,16 +30,16 @@ final class ShoulderAnalyzer: ExerciseAnalyzer {
             return .empty
         }
 
-        let leftShoulder  = smoother.smooth(key: "left_shoulder",  position: rawLeftShoulder)
-        let rightShoulder = smoother.smooth(key: "right_shoulder", position: rawRightShoulder)
-        let leftHip       = smoother.smooth(key: "left_hip",       position: rawLeftHip)
-        let rightHip      = smoother.smooth(key: "right_hip",      position: rawRightHip)
+        let ts = landmarks.timestamp
+        let leftShoulder  = smoother.smooth(key: "left_shoulder",  position: rawLeftShoulder,  timestamp: ts)
+        let rightShoulder = smoother.smooth(key: "right_shoulder", position: rawRightShoulder, timestamp: ts)
+        let leftHip       = smoother.smooth(key: "left_hip",       position: rawLeftHip,       timestamp: ts)
+        let rightHip      = smoother.smooth(key: "right_hip",      position: rawRightHip,      timestamp: ts)
 
-        // 3D world positions for metric elevation measurement
-        let wLeftShoulder  = landmarks.worldPosition(for: .shoulder(.left)) .map { smoother.smooth3D(key: "left_shoulder",  position: $0) }
-        let wRightShoulder = landmarks.worldPosition(for: .shoulder(.right)).map { smoother.smooth3D(key: "right_shoulder", position: $0) }
-        let wLeftHip       = landmarks.worldPosition(for: .hip(.left))      .map { smoother.smooth3D(key: "left_hip",       position: $0) }
-        let wRightHip      = landmarks.worldPosition(for: .hip(.right))     .map { smoother.smooth3D(key: "right_hip",      position: $0) }
+        let wLeftShoulder  = landmarks.worldPosition(for: .shoulder(.left)) .map { smoother.smooth3D(key: "left_shoulder",  position: $0, timestamp: ts) }
+        let wRightShoulder = landmarks.worldPosition(for: .shoulder(.right)).map { smoother.smooth3D(key: "right_shoulder", position: $0, timestamp: ts) }
+        let wLeftHip       = landmarks.worldPosition(for: .hip(.left))      .map { smoother.smooth3D(key: "left_hip",       position: $0, timestamp: ts) }
+        let wRightHip      = landmarks.worldPosition(for: .hip(.right))     .map { smoother.smooth3D(key: "right_hip",      position: $0, timestamp: ts) }
 
         // Shoulder tilt angle from horizontal.
         // 3D version: uses metric y (up = positive) and accounts for depth (z).

@@ -12,7 +12,7 @@ final class SquatAnalyzer: ExerciseAnalyzer {
         [.hip(side), .knee(side), .ankle(side)]
     }
 
-    private let smoother = LandmarkSmoother(alpha: 0.7)
+    private let smoother = LandmarkSmoother()
     private let repCounter = RepCounter(extendedThreshold: 160, flexedThreshold: 100)
     private let tempoTracker = TempoTracker()
 
@@ -27,14 +27,14 @@ final class SquatAnalyzer: ExerciseAnalyzer {
             return .empty
         }
 
-        let hip   = smoother.smooth(key: "\(side)_hip",   position: rawHip)
-        let knee  = smoother.smooth(key: "\(side)_knee",  position: rawKnee)
-        let ankle = smoother.smooth(key: "\(side)_ankle", position: rawAnkle)
+        let ts = landmarks.timestamp
+        let hip   = smoother.smooth(key: "\(side)_hip",   position: rawHip,   timestamp: ts)
+        let knee  = smoother.smooth(key: "\(side)_knee",  position: rawKnee,  timestamp: ts)
+        let ankle = smoother.smooth(key: "\(side)_ankle", position: rawAnkle, timestamp: ts)
 
-        // 3D world positions for camera-independent angle measurement
-        let w_hip   = landmarks.worldPosition(for: .hip(side))  .map { smoother.smooth3D(key: "\(side)_hip",   position: $0) }
-        let w_knee  = landmarks.worldPosition(for: .knee(side)) .map { smoother.smooth3D(key: "\(side)_knee",  position: $0) }
-        let w_ankle = landmarks.worldPosition(for: .ankle(side)).map { smoother.smooth3D(key: "\(side)_ankle", position: $0) }
+        let w_hip   = landmarks.worldPosition(for: .hip(side))  .map { smoother.smooth3D(key: "\(side)_hip",   position: $0, timestamp: ts) }
+        let w_knee  = landmarks.worldPosition(for: .knee(side)) .map { smoother.smooth3D(key: "\(side)_knee",  position: $0, timestamp: ts) }
+        let w_ankle = landmarks.worldPosition(for: .ankle(side)).map { smoother.smooth3D(key: "\(side)_ankle", position: $0, timestamp: ts) }
 
         let kneeAngle: Float
         if let wh = w_hip, let wk = w_knee, let wa = w_ankle {

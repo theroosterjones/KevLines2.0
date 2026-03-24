@@ -15,7 +15,7 @@ final class RowAnalyzer: ExerciseAnalyzer {
         ]
     }
 
-    private let smoother = LandmarkSmoother(alpha: 0.7)
+    private let smoother = LandmarkSmoother()
     private let repCounter = RepCounter(extendedThreshold: 150, flexedThreshold: 100)
     private let tempoTracker = TempoTracker()
 
@@ -32,16 +32,17 @@ final class RowAnalyzer: ExerciseAnalyzer {
             return .empty
         }
 
-        let shoulder    = smoother.smooth(key: "\(side)_shoulder",          position: rawShoulder)
-        let elbow       = smoother.smooth(key: "\(side)_elbow",             position: rawElbow)
-        let wrist       = smoother.smooth(key: "\(side)_wrist",             position: rawWrist)
-        let hip         = smoother.smooth(key: "\(side)_hip",               position: rawHip)
-        let oppShoulder = smoother.smooth(key: "\(side.opposite)_shoulder", position: rawOppShoulder)
+        let ts = landmarks.timestamp
+        let shoulder    = smoother.smooth(key: "\(side)_shoulder",          position: rawShoulder,    timestamp: ts)
+        let elbow       = smoother.smooth(key: "\(side)_elbow",             position: rawElbow,       timestamp: ts)
+        let wrist       = smoother.smooth(key: "\(side)_wrist",             position: rawWrist,       timestamp: ts)
+        let hip         = smoother.smooth(key: "\(side)_hip",               position: rawHip,         timestamp: ts)
+        let oppShoulder = smoother.smooth(key: "\(side.opposite)_shoulder", position: rawOppShoulder, timestamp: ts)
 
-        let w_shoulder = landmarks.worldPosition(for: .shoulder(side)).map { smoother.smooth3D(key: "\(side)_shoulder", position: $0) }
-        let w_elbow    = landmarks.worldPosition(for: .elbow(side))   .map { smoother.smooth3D(key: "\(side)_elbow",    position: $0) }
-        let w_wrist    = landmarks.worldPosition(for: .wrist(side))   .map { smoother.smooth3D(key: "\(side)_wrist",    position: $0) }
-        let w_hip      = landmarks.worldPosition(for: .hip(side))     .map { smoother.smooth3D(key: "\(side)_hip",      position: $0) }
+        let w_shoulder = landmarks.worldPosition(for: .shoulder(side)).map { smoother.smooth3D(key: "\(side)_shoulder", position: $0, timestamp: ts) }
+        let w_elbow    = landmarks.worldPosition(for: .elbow(side))   .map { smoother.smooth3D(key: "\(side)_elbow",    position: $0, timestamp: ts) }
+        let w_wrist    = landmarks.worldPosition(for: .wrist(side))   .map { smoother.smooth3D(key: "\(side)_wrist",    position: $0, timestamp: ts) }
+        let w_hip      = landmarks.worldPosition(for: .hip(side))     .map { smoother.smooth3D(key: "\(side)_hip",      position: $0, timestamp: ts) }
 
         let elbowAngle: Float
         if let ws = w_shoulder, let we = w_elbow, let ww = w_wrist {
