@@ -5,11 +5,22 @@ struct AngleCalculator {
 
     /// Compute the interior angle at vertex `b` formed by rays b→a and b→c.
     /// Returns degrees in the range [0, 180].
+    /// Uses 2D screen coordinates — camera-angle-dependent.
     static func angle(a: SIMD2<Float>, b: SIMD2<Float>, c: SIMD2<Float>) -> Float {
         let radians = atan2(c.y - b.y, c.x - b.x) - atan2(a.y - b.y, a.x - b.x)
         var deg = abs(radians * 180.0 / .pi)
         if deg > 180.0 { deg = 360.0 - deg }
         return deg
+    }
+
+    /// Compute the true 3D interior angle at vertex `b` using metric world coordinates.
+    /// Camera-position-independent. Returns degrees in the range [0, 180].
+    static func angle3D(a: SIMD3<Float>, b: SIMD3<Float>, c: SIMD3<Float>) -> Float {
+        let v1 = simd_normalize(a - b)
+        let v2 = simd_normalize(c - b)
+        // Clamp to [-1, 1] to guard against floating-point drift past the acos domain
+        let cosTheta = simd_dot(v1, v2).clamped(to: -1...1)
+        return acos(cosTheta) * 180.0 / .pi
     }
 
     /// Extend the line through `p1` and `p2` in both directions until it hits the

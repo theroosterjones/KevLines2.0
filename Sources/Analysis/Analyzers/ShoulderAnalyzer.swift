@@ -35,15 +35,40 @@ final class ShoulderAnalyzer: ExerciseAnalyzer {
         let leftHip       = smoother.smooth(key: "left_hip",       position: rawLeftHip)
         let rightHip      = smoother.smooth(key: "right_hip",      position: rawRightHip)
 
-        // Shoulder tilt: angle of the shoulder line from horizontal.
-        // Positive = left is higher (elevated); negative = right is higher.
-        // In normalized coords, y increases downward, so right.y > left.y means left is higher.
-        let shoulderTiltDeg = atan2(rightShoulder.y - leftShoulder.y,
-                                    rightShoulder.x - leftShoulder.x) * (180.0 / .pi)
+        // 3D world positions for metric elevation measurement
+        let wLeftShoulder  = landmarks.worldPosition(for: .shoulder(.left)) .map { smoother.smooth3D(key: "left_shoulder",  position: $0) }
+        let wRightShoulder = landmarks.worldPosition(for: .shoulder(.right)).map { smoother.smooth3D(key: "right_shoulder", position: $0) }
+        let wLeftHip       = landmarks.worldPosition(for: .hip(.left))      .map { smoother.smooth3D(key: "left_hip",       position: $0) }
+        let wRightHip      = landmarks.worldPosition(for: .hip(.right))     .map { smoother.smooth3D(key: "right_hip",      position: $0) }
 
-        // Hip tilt for baseline reference
-        let hipTiltDeg = atan2(rightHip.y - leftHip.y,
-                               rightHip.x - leftHip.x) * (180.0 / .pi)
+        // Shoulder tilt angle from horizontal.
+        // 3D version: uses metric y (up = positive) and accounts for depth (z).
+        //   Positive = right shoulder higher; negative = left shoulder higher.
+        // 2D fallback: screen-space atan2 (y-down), sign convention flipped for label consistency.
+        let shoulderTiltDeg: Float
+        let using3D: Bool
+        if let wl = wLeftShoulder, let wr = wRightShoulder {
+            let dy = wr.y - wl.y
+            let horizontalDist = sqrt(pow(wr.x - wl.x, 2) + pow(wr.z - wl.z, 2))
+            shoulderTiltDeg = atan2(dy, horizontalDist) * (180.0 / .pi)
+            using3D = true
+        } else {
+            // Screen-space fallback: positive = left elevated (y-down coords)
+            shoulderTiltDeg = -(atan2(rightShoulder.y - leftShoulder.y,
+                                      rightShoulder.x - leftShoulder.x) * (180.0 / .pi))
+            using3D = false
+        }
+
+        // Hip tilt for baseline reference (same 3D/2D logic)
+        let hipTiltDeg: Float
+        if let wl = wLeftHip, let wr = wRightHip {
+            let dy = wr.y - wl.y
+            let horizontalDist = sqrt(pow(wr.x - wl.x, 2) + pow(wr.z - wl.z, 2))
+            hipTiltDeg = atan2(dy, horizontalDist) * (180.0 / .pi)
+        } else {
+            hipTiltDeg = -(atan2(rightHip.y - leftHip.y,
+                                  rightHip.x - leftHip.x) * (180.0 / .pi))
+        }
 
         let shoulderMid = (leftShoulder + rightShoulder) / 2.0
         let hipMid      = (leftHip + rightHip) / 2.0
@@ -75,9 +100,11 @@ final class ShoulderAnalyzer: ExerciseAnalyzer {
         instructions.append(.text("R", at: SIMD2(rightShoulder.x + 0.02, rightShoulder.y - 0.05), color: .blue, size: 20))
 
         // HUD — which side is elevated and by how much
+        // Positive = right elevated (both 3D and normalised-2D fallback share this convention now)
         let absTilt = abs(shoulderTiltDeg)
-        let elevatedSide = shoulderTiltDeg >= 0 ? "L elevated" : "R elevated"
-        instructions.append(.text("\(elevatedSide)  \(String(format: "%.1f", absTilt))\u{00B0}",
+        let elevatedSide = shoulderTiltDeg >= 0 ? "R elevated" : "L elevated"
+        let modeTag = using3D ? "" : " (2D)"
+        instructions.append(.text("\(elevatedSide)  \(String(format: "%.1f", absTilt))\u{00B0}\(modeTag)",
                                   at: SIMD2(0.02, 0.05), color: .white, size: 22))
         instructions.append(.text("Hip ref: \(String(format: "%.1f", hipTiltDeg))\u{00B0}",
                                   at: SIMD2(0.02, 0.11), color: .cyan,  size: 18))

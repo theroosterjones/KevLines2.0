@@ -32,10 +32,19 @@ final class ElbowAnalyzer: ExerciseAnalyzer {
         let elbow    = smoother.smooth(key: "\(side)_elbow",    position: rawElbow)
         let wrist    = smoother.smooth(key: "\(side)_wrist",    position: rawWrist)
 
-        let elbowAngle = AngleCalculator.angle(a: shoulder, b: elbow, c: wrist)
+        let w_shoulder = landmarks.worldPosition(for: .shoulder(side)).map { smoother.smooth3D(key: "\(side)_shoulder", position: $0) }
+        let w_elbow    = landmarks.worldPosition(for: .elbow(side))   .map { smoother.smooth3D(key: "\(side)_elbow",    position: $0) }
+        let w_wrist    = landmarks.worldPosition(for: .wrist(side))   .map { smoother.smooth3D(key: "\(side)_wrist",    position: $0) }
+
+        let elbowAngle: Float
+        if let ws = w_shoulder, let we = w_elbow, let ww = w_wrist {
+            elbowAngle = AngleCalculator.angle3D(a: ws, b: we, c: ww)
+        } else {
+            elbowAngle = AngleCalculator.angle(a: shoulder, b: elbow, c: wrist)
+        }
 
         repCounter.update(angle: elbowAngle)
-        let frameTime = CMTimeMakeWithSeconds(landmarks.timestamp, 600)
+        let frameTime = CMTimeMakeWithSeconds(landmarks.timestamp, preferredTimescale: 600)
         let phase = tempoTracker.update(angle: elbowAngle, time: frameTime)
 
         var instructions: [OverlayInstruction] = []

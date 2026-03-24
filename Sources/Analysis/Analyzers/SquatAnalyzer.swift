@@ -27,11 +27,21 @@ final class SquatAnalyzer: ExerciseAnalyzer {
             return .empty
         }
 
-        let hip   = smoother.smooth(key: "\(side)_hip", position: rawHip)
-        let knee  = smoother.smooth(key: "\(side)_knee", position: rawKnee)
+        let hip   = smoother.smooth(key: "\(side)_hip",   position: rawHip)
+        let knee  = smoother.smooth(key: "\(side)_knee",  position: rawKnee)
         let ankle = smoother.smooth(key: "\(side)_ankle", position: rawAnkle)
 
-        let kneeAngle = AngleCalculator.angle(a: hip, b: knee, c: ankle)
+        // 3D world positions for camera-independent angle measurement
+        let w_hip   = landmarks.worldPosition(for: .hip(side))  .map { smoother.smooth3D(key: "\(side)_hip",   position: $0) }
+        let w_knee  = landmarks.worldPosition(for: .knee(side)) .map { smoother.smooth3D(key: "\(side)_knee",  position: $0) }
+        let w_ankle = landmarks.worldPosition(for: .ankle(side)).map { smoother.smooth3D(key: "\(side)_ankle", position: $0) }
+
+        let kneeAngle: Float
+        if let wh = w_hip, let wk = w_knee, let wa = w_ankle {
+            kneeAngle = AngleCalculator.angle3D(a: wh, b: wk, c: wa)
+        } else {
+            kneeAngle = AngleCalculator.angle(a: hip, b: knee, c: ankle)
+        }
 
         repCounter.update(angle: kneeAngle)
 

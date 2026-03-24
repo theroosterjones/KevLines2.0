@@ -29,12 +29,28 @@ final class LatPulldownAnalyzer: ExerciseAnalyzer {
         }
 
         let shoulder = smoother.smooth(key: "\(side)_shoulder", position: rawShoulder)
-        let elbow    = smoother.smooth(key: "\(side)_elbow", position: rawElbow)
-        let wrist    = smoother.smooth(key: "\(side)_wrist", position: rawWrist)
-        let hip      = smoother.smooth(key: "\(side)_hip", position: rawHip)
+        let elbow    = smoother.smooth(key: "\(side)_elbow",    position: rawElbow)
+        let wrist    = smoother.smooth(key: "\(side)_wrist",    position: rawWrist)
+        let hip      = smoother.smooth(key: "\(side)_hip",      position: rawHip)
 
-        let elbowAngle    = AngleCalculator.angle(a: shoulder, b: elbow, c: wrist)
-        let shoulderAngle = AngleCalculator.angle(a: hip, b: shoulder, c: elbow)
+        let w_shoulder = landmarks.worldPosition(for: .shoulder(side)).map { smoother.smooth3D(key: "\(side)_shoulder", position: $0) }
+        let w_elbow    = landmarks.worldPosition(for: .elbow(side))   .map { smoother.smooth3D(key: "\(side)_elbow",    position: $0) }
+        let w_wrist    = landmarks.worldPosition(for: .wrist(side))   .map { smoother.smooth3D(key: "\(side)_wrist",    position: $0) }
+        let w_hip      = landmarks.worldPosition(for: .hip(side))     .map { smoother.smooth3D(key: "\(side)_hip",      position: $0) }
+
+        let elbowAngle: Float
+        if let ws = w_shoulder, let we = w_elbow, let ww = w_wrist {
+            elbowAngle = AngleCalculator.angle3D(a: ws, b: we, c: ww)
+        } else {
+            elbowAngle = AngleCalculator.angle(a: shoulder, b: elbow, c: wrist)
+        }
+
+        let shoulderAngle: Float
+        if let wh = w_hip, let ws = w_shoulder, let we = w_elbow {
+            shoulderAngle = AngleCalculator.angle3D(a: wh, b: ws, c: we)
+        } else {
+            shoulderAngle = AngleCalculator.angle(a: hip, b: shoulder, c: elbow)
+        }
 
         repCounter.update(angle: elbowAngle)
 
