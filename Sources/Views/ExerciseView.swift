@@ -22,10 +22,16 @@ struct PickedMovie: Transferable {
     }
 }
 
+private enum AnalysisMode: String, CaseIterable {
+    case savedVideo  = "Saved Video"
+    case liveCamera  = "Live Camera"
+}
+
 struct ExerciseView: View {
     @StateObject private var processor = VideoProcessor()
 
-    @State private var selectedExerciseType: ExerciseType = .row
+    @State private var analysisMode: AnalysisMode = .savedVideo
+    @State private var selectedExerciseType: ExerciseType = .squat
     @State private var selectedSide: BodySide = .left
     @State private var selectedVideoItem: PhotosPickerItem?
     @State private var selectedVideoURL: URL?
@@ -45,13 +51,19 @@ struct ExerciseView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    exercisePicker
-                    sidePicker
-                    videoPickerButton
-                    videoPreview
-                    analyzeSection
-                    resultsSection
-                    exportSection
+                    modePicker
+
+                    if analysisMode == .savedVideo {
+                        exercisePicker
+                        sidePicker
+                        videoPickerButton
+                        videoPreview
+                        analyzeSection
+                        resultsSection
+                        exportSection
+                    } else {
+                        liveCameraButton
+                    }
                 }
                 .padding(.bottom, 40)
             }
@@ -73,6 +85,30 @@ struct ExerciseView: View {
     }
 
     // MARK: - Subviews
+
+    private var modePicker: some View {
+        Picker("Mode", selection: $analysisMode) {
+            ForEach(AnalysisMode.allCases, id: \.self) { mode in
+                Text(mode.rawValue).tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal)
+        .padding(.top, 8)
+    }
+
+    private var liveCameraButton: some View {
+        NavigationLink(destination: LiveAnalysisView()) {
+            Label("Start Live Analysis", systemImage: "camera.fill")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.indigo)
+                .foregroundColor(.white)
+                .cornerRadius(12)
+        }
+        .padding(.horizontal)
+    }
 
     private var exercisePicker: some View {
         Picker("Exercise", selection: $selectedExerciseType) {

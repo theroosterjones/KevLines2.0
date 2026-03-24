@@ -4,11 +4,9 @@ import simd
 // MARK: - Exercise Types
 
 enum ExerciseType: String, CaseIterable, Identifiable, Codable {
-    case row = "Row"
-    case backSquat = "Back Squat"
-    case hackSquat = "Hack Squat"
-    case latPulldown = "Lat Pulldown"
     case squat = "Squat"
+    case row = "Row"
+    case latPulldown = "Lat Pulldown"
     case elbowCurl = "Elbow (Bicep/Tricep)"
     case shoulderAssessment = "Shoulder Assessment"
 
