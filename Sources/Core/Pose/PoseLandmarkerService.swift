@@ -78,6 +78,7 @@ final class PoseLandmarkerService {
 
         guard let poseLandmarks = result.landmarks.first else { return nil }
 
+        // 2D normalized landmarks (for overlay drawing)
         var landmarks: [PoseLandmarkType: NormalizedLandmark] = [:]
         for (index, lm) in poseLandmarks.enumerated() {
             guard let type = PoseLandmarkType(rawValue: index) else { continue }
@@ -88,8 +89,18 @@ final class PoseLandmarkerService {
             )
         }
 
+        // 3D world landmarks in metric space (for accurate angle calculations)
+        var worldLandmarks: [PoseLandmarkType: SIMD3<Float>] = [:]
+        if let worldList = result.worldLandmarks.first {
+            for (index, wlm) in worldList.enumerated() {
+                guard let type = PoseLandmarkType(rawValue: index) else { continue }
+                worldLandmarks[type] = SIMD3<Float>(wlm.x, wlm.y, wlm.z)
+            }
+        }
+
         return PoseResult(
             landmarks: landmarks,
+            worldLandmarks: worldLandmarks,
             timestamp: Double(timestampMs) / 1000.0
         )
     }

@@ -26,6 +26,7 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.9"
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "KevLines needs access to your photo library to select exercise videos for analysis."
+        INFOPLIST_KEY_NSCameraUsageDescription: "KevLines uses your camera for real-time exercise form analysis with skeleton overlay."
         INFOPLIST_KEY_UILaunchScreen_Generation: true
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"

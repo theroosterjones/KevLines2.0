@@ -82,9 +82,18 @@ struct NormalizedLandmark {
 /// Full pose detection result for a single frame.
 struct PoseResult {
     let landmarks: [PoseLandmarkType: NormalizedLandmark]
+    /// Metric 3D world positions (meters, origin = hip midpoint, y-up).
+    /// Empty when the model returns no world landmarks.
+    let worldLandmarks: [PoseLandmarkType: SIMD3<Float>]
     let timestamp: Double  // seconds
 
+    /// Normalized 2D screen position (0–1). Used for overlay drawing.
     func position(for type: PoseLandmarkType) -> SIMD2<Float>? {
         landmarks[type]?.position
+    }
+
+    /// Metric 3D world position. Used for accurate angle calculations.
+    func worldPosition(for type: PoseLandmarkType) -> SIMD3<Float>? {
+        worldLandmarks[type]
     }
 }

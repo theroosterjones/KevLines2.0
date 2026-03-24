@@ -22,10 +22,16 @@ struct PickedMovie: Transferable {
     }
 }
 
+private enum AnalysisMode: String, CaseIterable {
+    case savedVideo  = "Saved Video"
+    case liveCamera  = "Live Camera"
+}
+
 struct ExerciseView: View {
     @StateObject private var processor = VideoProcessor()
 
-    @State private var selectedExerciseType: ExerciseType = .row
+    @State private var analysisMode: AnalysisMode = .savedVideo
+    @State private var selectedExerciseType: ExerciseType = .squat
     @State private var selectedSide: BodySide = .left
     @State private var selectedVideoItem: PhotosPickerItem?
     @State private var selectedVideoURL: URL?
@@ -45,13 +51,19 @@ struct ExerciseView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    exercisePicker
-                    sidePicker
-                    videoPickerButton
-                    videoPreview
-                    analyzeSection
-                    resultsSection
-                    exportSection
+                    modePicker
+
+                    if analysisMode == .savedVideo {
+                        exercisePicker
+                        sidePicker
+                        videoPickerButton
+                        videoPreview
+                        analyzeSection
+                        resultsSection
+                        exportSection
+                    } else {
+                        liveCameraButton
+                    }
                 }
                 .padding(.bottom, 40)
             }
@@ -74,6 +86,30 @@ struct ExerciseView: View {
 
     // MARK: - Subviews
 
+    private var modePicker: some View {
+        Picker("Mode", selection: $analysisMode) {
+            ForEach(AnalysisMode.allCases, id: \.self) { mode in
+                Text(mode.rawValue).tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal)
+        .padding(.top, 8)
+    }
+
+    private var liveCameraButton: some View {
+        NavigationLink(destination: LiveAnalysisView()) {
+            Label("Start Live Analysis", systemImage: "camera.fill")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.indigo)
+                .foregroundColor(.white)
+                .cornerRadius(12)
+        }
+        .padding(.horizontal)
+    }
+
     private var exercisePicker: some View {
         Picker("Exercise", selection: $selectedExerciseType) {
             ForEach(ExerciseType.allCases) { type in
@@ -84,13 +120,16 @@ struct ExerciseView: View {
         .padding(.horizontal)
     }
 
+    @ViewBuilder
     private var sidePicker: some View {
-        Picker("Side", selection: $selectedSide) {
-            Text("Left").tag(BodySide.left)
-            Text("Right").tag(BodySide.right)
+        if selectedExercise.requiresSideSelection {
+            Picker("Side", selection: $selectedSide) {
+                Text("Left").tag(BodySide.left)
+                Text("Right").tag(BodySide.right)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
         }
-        .pickerStyle(.segmented)
-        .padding(.horizontal)
     }
 
     private var videoPickerButton: some View {
@@ -162,10 +201,26 @@ struct ExerciseView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Results")
                     .font(.headline)
-                Text("Reps: \(summary.totalReps)")
+
+                if selectedExerciseType == .shoulderAssessment {
+                    // Shoulder assessment: show tilt interpretation instead of rep count
+                    if let tilt = summary.averageAngles.first(where: { $0.joint == .shoulder }) {
+                        let absTilt = abs(tilt.degrees)
+                        let side = tilt.degrees >= 0 ? "Left" : "Right"
+                        Text("\(side) shoulder elevated  \(String(format: "%.1f", absTilt))° avg")
+                    }
+                } else {
+                    Text("Reps: \(summary.totalReps)")
+                }
+
                 Text("Duration: \(String(format: "%.1f", summary.duration))s")
+
                 ForEach(summary.averageAngles, id: \.joint) { angle in
-                    Text("Avg \(angle.joint.rawValue): \(Int(angle.degrees))°")
+                    if selectedExerciseType == .shoulderAssessment, angle.joint == .shoulder {
+                        // Already shown above in interpreted form; skip raw line
+                    } else {
+                        Text("Avg \(angle.joint.rawValue): \(Int(angle.degrees))\u{00B0}")
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
