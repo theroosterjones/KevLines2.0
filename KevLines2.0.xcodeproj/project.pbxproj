@@ -12,6 +12,7 @@
 		0F00F94AE5909EC5BD56C989 /* VideoReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF04D86E9DDDDE63553BD0FB /* VideoReader.swift */; };
 		12BCD0356FB1F3BDE689AE3B /* LandmarkTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88448A5595A3EB580ECAFBA6 /* LandmarkTypes.swift */; };
 		272606963B330964D1E509AF /* SwiftTasksVision in Frameworks */ = {isa = PBXBuildFile; productRef = 54928F3BD3ACD68279D94079 /* SwiftTasksVision */; };
+		2C2E3F81FF26ACC69AF69AC1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 864EA6F011A3C47B37950BDD /* Assets.xcassets */; };
 		310F8D531E819EC7A8F4B2EB /* PoseLandmarkerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90354545ABE21C88DD4714B /* PoseLandmarkerService.swift */; };
 		368F8B4B3CE5623DE0C8F7E8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF385D837369DDE56870A09 /* ContentView.swift */; };
 		424BB36A5D8F39A12B4B4A2C /* ShoulderAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68C81DC9EB80D095D405993F /* ShoulderAnalyzer.swift */; };
@@ -70,6 +71,7 @@
 		8293F702B27BE46ECC67C9B8 /* WorkoutHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutHistoryView.swift; sourceTree = "<group>"; };
 		853287EEA68FF7813F005490 /* AngleCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AngleCalculator.swift; sourceTree = "<group>"; };
 		861347630F4185FB437966F8 /* ElbowAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElbowAnalyzer.swift; sourceTree = "<group>"; };
+		864EA6F011A3C47B37950BDD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		88448A5595A3EB580ECAFBA6 /* LandmarkTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandmarkTypes.swift; sourceTree = "<group>"; };
 		98BE6C60BC3535F0EEF561C2 /* SquatAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SquatAnalyzer.swift; sourceTree = "<group>"; };
 		9E7DC1A7735FA6E24AB4D899 /* ExerciseAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseAnalyzer.swift; sourceTree = "<group>"; };
@@ -223,6 +225,7 @@
 		E788CE3E2B97041AF4B393B3 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				864EA6F011A3C47B37950BDD /* Assets.xcassets */,
 				A376ABE354BD8457CEB30C65 /* pose_landmarker_full.task */,
 				BD4CB0741577788C5597CB63 /* Analysis */,
 				F45FCF336FBE9E09DEE32820 /* App */,
@@ -286,9 +289,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = AB960B61B54C71B56A09C625 /* Build configuration list for PBXNativeTarget "KevLines2.0" */;
 			buildPhases = (
+				52DBC4D6DD100321FAE5E8AC /* Patch MediaPipe framework plist for App Store validation */,
 				B5D9B8087060107FF6239B0C /* Sources */,
 				3A643E731FD86F218BB34D24 /* Resources */,
 				C5B2DFFC7B9D329F2BDF3D32 /* Frameworks */,
+				2F8EA79C7DD4023E16C0BD7B /* Patch embedded MediaPipe framework plist for App Store validation */,
 			);
 			buildRules = (
 			);
@@ -339,11 +344,51 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2C2E3F81FF26ACC69AF69AC1 /* Assets.xcassets in Resources */,
 				C7A7FF839004D241B75CE903 /* pose_landmarker_full.task in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		2F8EA79C7DD4023E16C0BD7B /* Patch embedded MediaPipe framework plist for App Store validation */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Patch embedded MediaPipe framework plist for App Store validation";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "EMBEDDED_PLIST=\"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MediaPipeTasksVision.framework/Info.plist\"\nif [ ! -f \"$EMBEDDED_PLIST\" ]; then\n  exit 0\nfi\n\n# Remove XCFramework-only keys that appear in the third-party plist.\n/usr/libexec/PlistBuddy -c \"Delete :AvailableLibraries\" \"$EMBEDDED_PLIST\" >/dev/null 2>&1 || true\n/usr/libexec/PlistBuddy -c \"Delete :XCFrameworkFormatVersion\" \"$EMBEDDED_PLIST\" >/dev/null 2>&1 || true\n\n/usr/libexec/PlistBuddy -c \"Delete :MinimumOSVersion\" \"$EMBEDDED_PLIST\" >/dev/null 2>&1 || true\n/usr/libexec/PlistBuddy -c \"Add :MinimumOSVersion string ${IPHONEOS_DEPLOYMENT_TARGET}\" \"$EMBEDDED_PLIST\"\n\n/usr/libexec/PlistBuddy -c \"Delete :CFBundleShortVersionString\" \"$EMBEDDED_PLIST\" >/dev/null 2>&1 || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleShortVersionString string ${MARKETING_VERSION}\" \"$EMBEDDED_PLIST\"\n\n/usr/libexec/PlistBuddy -c \"Delete :CFBundleVersion\" \"$EMBEDDED_PLIST\" >/dev/null 2>&1 || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleVersion string ${CURRENT_PROJECT_VERSION}\" \"$EMBEDDED_PLIST\"\n\n/usr/libexec/PlistBuddy -c \"Delete :CFBundlePackageType\" \"$EMBEDDED_PLIST\" >/dev/null 2>&1 || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundlePackageType string FMWK\" \"$EMBEDDED_PLIST\"\n";
+		};
+		52DBC4D6DD100321FAE5E8AC /* Patch MediaPipe framework plist for App Store validation */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Patch MediaPipe framework plist for App Store validation";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "DERIVED_DATA_ROOT=\"${BUILD_DIR%/Build/*}\"\nIOS_PLIST=\"${DERIVED_DATA_ROOT}/SourcePackages/checkouts/SwiftTasksVision/Dependencies/MediaPipeTasksVision.xcframework/ios-arm64/MediaPipeTasksVision.framework/Info.plist\"\nSIM_PLIST=\"${DERIVED_DATA_ROOT}/SourcePackages/checkouts/SwiftTasksVision/Dependencies/MediaPipeTasksVision.xcframework/ios-arm64_x86_64-simulator/MediaPipeTasksVision.framework/Info.plist\"\n\npatch_plist() {\n  plist_path=\"$1\"\n  if [ ! -f \"$plist_path\" ]; then\n    return 0\n  fi\n\n  /usr/libexec/PlistBuddy -c \"Delete :MinimumOSVersion\" \"$plist_path\" >/dev/null 2>&1 || true\n  /usr/libexec/PlistBuddy -c \"Add :MinimumOSVersion string ${IPHONEOS_DEPLOYMENT_TARGET}\" \"$plist_path\"\n\n  /usr/libexec/PlistBuddy -c \"Delete :CFBundleShortVersionString\" \"$plist_path\" >/dev/null 2>&1 || true\n  /usr/libexec/PlistBuddy -c \"Add :CFBundleShortVersionString string ${MARKETING_VERSION}\" \"$plist_path\"\n\n  /usr/libexec/PlistBuddy -c \"Delete :CFBundleVersion\" \"$plist_path\" >/dev/null 2>&1 || true\n  /usr/libexec/PlistBuddy -c \"Add :CFBundleVersion string ${CURRENT_PROJECT_VERSION}\" \"$plist_path\"\n}\n\npatch_plist \"$IOS_PLIST\"\npatch_plist \"$SIM_PLIST\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B5D9B8087060107FF6239B0C /* Sources */ = {
@@ -410,6 +455,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = YCKQ2HTCQ3;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = KevLines;
 				INFOPLIST_KEY_NSCameraUsageDescription = "KevLines uses your camera for real-time exercise form analysis with skeleton overlay.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "KevLines needs access to your photo library to select exercise videos for analysis.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -425,7 +471,7 @@
 				PRODUCT_NAME = KevLines2.0;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.9;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -592,6 +638,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = YCKQ2HTCQ3;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = KevLines;
 				INFOPLIST_KEY_NSCameraUsageDescription = "KevLines uses your camera for real-time exercise form analysis with skeleton overlay.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "KevLines needs access to your photo library to select exercise videos for analysis.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -607,7 +654,7 @@
 				PRODUCT_NAME = KevLines2.0;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.9;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
