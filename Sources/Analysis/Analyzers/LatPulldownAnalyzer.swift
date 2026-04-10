@@ -53,7 +53,7 @@ final class LatPulldownAnalyzer: ExerciseAnalyzer {
             shoulderAngle = AngleCalculator.angle(a: hip, b: shoulder, c: elbow)
         }
 
-        repCounter.update(angle: elbowAngle)
+        repCounter.update(angle: elbowAngle, timestamp: ts)
 
         var instructions: [OverlayInstruction] = []
 
@@ -86,7 +86,7 @@ final class LatPulldownAnalyzer: ExerciseAnalyzer {
             ],
             repCount: repCounter.count,
             repState: repCounter.state,
-            tempoPhase: tempoTracker.update(angle: elbowAngle, time: .zero),
+            tempoPhase: tempoTracker.update(angle: elbowAngle, timestamp: ts),
             overlayInstructions: instructions
         )
     }

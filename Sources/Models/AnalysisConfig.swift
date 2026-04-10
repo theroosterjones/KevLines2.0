@@ -4,10 +4,10 @@ import Foundation
 /// Centralizes values that were previously hardcoded across Python analyzers.
 struct AnalysisConfig {
     /// MediaPipe pose detection confidence threshold (0–1).
-    var minDetectionConfidence: Float = 0.5
+    var minDetectionConfidence: Float = 0.35
 
     /// MediaPipe pose tracking confidence threshold (0–1).
-    var minTrackingConfidence: Float = 0.5
+    var minTrackingConfidence: Float = 0.35
 
     /// EMA smoothing alpha for landmark positions.
     /// 0.7 matches the Python analyzers. Lower = smoother but more lag.

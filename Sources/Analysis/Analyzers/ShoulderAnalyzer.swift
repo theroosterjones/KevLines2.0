@@ -13,7 +13,12 @@ final class ShoulderAnalyzer: ExerciseAnalyzer {
     let side: BodySide = .left
 
     var requiredLandmarks: [PoseLandmarkType] {
-        [.shoulder(.left), .shoulder(.right), .hip(.left), .hip(.right)]
+        [
+            .shoulder(.left), .shoulder(.right),
+            .elbow(.left), .elbow(.right),
+            .wrist(.left), .wrist(.right),
+            .hip(.left), .hip(.right)
+        ]
     }
 
     private let smoother = LandmarkSmoother()
@@ -25,6 +30,10 @@ final class ShoulderAnalyzer: ExerciseAnalyzer {
     func analyze(landmarks: PoseResult) -> FrameAnalysis {
         guard let rawLeftShoulder  = landmarks.position(for: .shoulder(.left)),
               let rawRightShoulder = landmarks.position(for: .shoulder(.right)),
+              let rawLeftElbow     = landmarks.position(for: .elbow(.left)),
+              let rawRightElbow    = landmarks.position(for: .elbow(.right)),
+              let rawLeftWrist     = landmarks.position(for: .wrist(.left)),
+              let rawRightWrist    = landmarks.position(for: .wrist(.right)),
               let rawLeftHip       = landmarks.position(for: .hip(.left)),
               let rawRightHip      = landmarks.position(for: .hip(.right)) else {
             return .empty
@@ -33,6 +42,10 @@ final class ShoulderAnalyzer: ExerciseAnalyzer {
         let ts = landmarks.timestamp
         let leftShoulder  = smoother.smooth(key: "left_shoulder",  position: rawLeftShoulder,  timestamp: ts)
         let rightShoulder = smoother.smooth(key: "right_shoulder", position: rawRightShoulder, timestamp: ts)
+        let leftElbow     = smoother.smooth(key: "left_elbow",     position: rawLeftElbow,     timestamp: ts)
+        let rightElbow    = smoother.smooth(key: "right_elbow",    position: rawRightElbow,    timestamp: ts)
+        let leftWrist     = smoother.smooth(key: "left_wrist",     position: rawLeftWrist,     timestamp: ts)
+        let rightWrist    = smoother.smooth(key: "right_wrist",    position: rawRightWrist,    timestamp: ts)
         let leftHip       = smoother.smooth(key: "left_hip",       position: rawLeftHip,       timestamp: ts)
         let rightHip      = smoother.smooth(key: "right_hip",      position: rawRightHip,      timestamp: ts)
 
@@ -73,6 +86,22 @@ final class ShoulderAnalyzer: ExerciseAnalyzer {
         let shoulderMid = (leftShoulder + rightShoulder) / 2.0
         let hipMid      = (leftHip + rightHip) / 2.0
 
+        // Elbow deviation from the shoulder→wrist guide line.
+        // Report as % of shoulder-wrist segment length for side-to-side comparability.
+        func elbowDeviationPercent(shoulder: SIMD2<Float>, elbow: SIMD2<Float>, wrist: SIMD2<Float>) -> Float {
+            let line = wrist - shoulder
+            let lineLen = simd_length(line)
+            guard lineLen > 1e-6 else { return 0 }
+
+            let pointVec = elbow - shoulder
+            let area2 = abs(line.x * pointVec.y - line.y * pointVec.x) // 2D cross magnitude
+            let distance = area2 / lineLen
+            return (distance / lineLen) * 100.0
+        }
+
+        let leftElbowDevPct = elbowDeviationPercent(shoulder: leftShoulder, elbow: leftElbow, wrist: leftWrist)
+        let rightElbowDevPct = elbowDeviationPercent(shoulder: rightShoulder, elbow: rightElbow, wrist: rightWrist)
+
         var instructions: [OverlayInstruction] = []
 
         // Horizontal reference line through shoulder midpoint
@@ -89,9 +118,23 @@ final class ShoulderAnalyzer: ExerciseAnalyzer {
         // Shoulder girdle line (primary measurement)
         instructions.append(.line(from: leftShoulder, to: rightShoulder, color: .yellow, width: 4))
 
-        // Joint circles — left shoulder red, right shoulder blue, hips orange
+        // Shoulder-to-wrist guide lines help assess whether elbows drift off the arm path.
+        instructions.append(.line(from: leftShoulder, to: leftWrist, color: .magenta, width: 2))
+        instructions.append(.line(from: rightShoulder, to: rightWrist, color: .magenta, width: 2))
+
+        // Optional arm segment lines for clearer elbow positioning.
+        instructions.append(.line(from: leftShoulder, to: leftElbow, color: .blue, width: 2))
+        instructions.append(.line(from: leftElbow, to: leftWrist, color: .blue, width: 2))
+        instructions.append(.line(from: rightShoulder, to: rightElbow, color: .blue, width: 2))
+        instructions.append(.line(from: rightElbow, to: rightWrist, color: .blue, width: 2))
+
+        // Joint circles — shoulders, elbows, wrists, hips
         instructions.append(.circle(at: leftShoulder,  radius: 12, color: .red,    filled: true))
         instructions.append(.circle(at: rightShoulder, radius: 12, color: .blue,   filled: true))
+        instructions.append(.circle(at: leftElbow,     radius: 9,  color: .white,  filled: true))
+        instructions.append(.circle(at: rightElbow,    radius: 9,  color: .white,  filled: true))
+        instructions.append(.circle(at: leftWrist,     radius: 8,  color: .orange, filled: true))
+        instructions.append(.circle(at: rightWrist,    radius: 8,  color: .orange, filled: true))
         instructions.append(.circle(at: leftHip,       radius: 8,  color: .orange, filled: true))
         instructions.append(.circle(at: rightHip,      radius: 8,  color: .orange, filled: true))
 
@@ -108,6 +151,8 @@ final class ShoulderAnalyzer: ExerciseAnalyzer {
                                   at: SIMD2(0.02, 0.05), color: .white, size: 22))
         instructions.append(.text("Hip ref: \(String(format: "%.1f", hipTiltDeg))\u{00B0}",
                                   at: SIMD2(0.02, 0.11), color: .cyan,  size: 18))
+        instructions.append(.text("L dev: \(String(format: "%.1f", leftElbowDevPct))%   R dev: \(String(format: "%.1f", rightElbowDevPct))%",
+                                  at: SIMD2(0.02, 0.17), color: .magenta, size: 18))
 
         return FrameAnalysis(
             angles: [JointAngle(joint: .shoulder, degrees: shoulderTiltDeg)],

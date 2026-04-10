@@ -16,10 +16,12 @@ final class PoseLandmarkerService {
     }
 
     private let modelType: ModelType
+    private let config: AnalysisConfig
     private var poseLandmarker: PoseLandmarker?
 
-    init(modelType: ModelType = .full) {
-        self.modelType = modelType
+    init(config: AnalysisConfig = .default) {
+        self.config = config
+        self.modelType = config.modelType
         setupLandmarker()
     }
 
@@ -39,8 +41,8 @@ final class PoseLandmarkerService {
         let options = PoseLandmarkerOptions()
         options.baseOptions.modelAssetPath = modelPath
         options.runningMode = .video
-        options.minPoseDetectionConfidence = 0.5
-        options.minTrackingConfidence = 0.5
+        options.minPoseDetectionConfidence = config.minDetectionConfidence
+        options.minTrackingConfidence = config.minTrackingConfidence
         options.numPoses = 1
 
         do {

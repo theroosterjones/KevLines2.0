@@ -38,6 +38,7 @@ struct ExerciseView: View {
     @State private var analyzedVideoURL: URL?
     @State private var analysisSummary: AnalysisSummary?
     @State private var player: AVPlayer?
+    @State private var isLoadingSelectedVideo = false
 
     @State private var showingError = false
     @State private var errorMessage = ""
@@ -55,8 +56,10 @@ struct ExerciseView: View {
 
                     if analysisMode == .savedVideo {
                         exercisePicker
+                        cameraSetupTipCard
                         sidePicker
                         videoPickerButton
+                        loadingVideoSection
                         videoPreview
                         analyzeSection
                         resultsSection
@@ -121,6 +124,27 @@ struct ExerciseView: View {
     }
 
     @ViewBuilder
+    private var cameraSetupTipCard: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "camera.aperture")
+                .foregroundStyle(.indigo)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Camera setup tip")
+                    .font(.subheadline.weight(.semibold))
+                Text(selectedExerciseType.cameraSetupTip)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder
     private var sidePicker: some View {
         if selectedExercise.requiresSideSelection {
             Picker("Side", selection: $selectedSide) {
@@ -146,6 +170,23 @@ struct ExerciseView: View {
                 .cornerRadius(12)
         }
         .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    private var loadingVideoSection: some View {
+        if isLoadingSelectedVideo {
+            HStack(spacing: 10) {
+                ProgressView()
+                Text("Loading video...")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+            .padding(.horizontal)
+        }
     }
 
     @ViewBuilder
@@ -252,7 +293,26 @@ struct ExerciseView: View {
     // MARK: - Actions
 
     private func loadVideo(from item: PhotosPickerItem?) async {
-        guard let item else { return }
+        await MainActor.run {
+            isLoadingSelectedVideo = true
+            // Clear previous selection/results so state reflects current loading operation.
+            selectedVideoURL = nil
+            analyzedVideoURL = nil
+            analysisSummary = nil
+            player = nil
+        }
+
+        guard let item else {
+            await MainActor.run { isLoadingSelectedVideo = false }
+            return
+        }
+
+        defer {
+            Task { @MainActor in
+                isLoadingSelectedVideo = false
+            }
+        }
+
         do {
             guard let movie = try await item.loadTransferable(type: PickedMovie.self) else {
                 await MainActor.run {

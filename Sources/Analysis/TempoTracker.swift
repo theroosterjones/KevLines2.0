@@ -10,10 +10,18 @@ final class TempoTracker {
     /// Degrees-per-second below which we consider movement "paused".
     let velocityThreshold: Float
 
+    /// Separate lower threshold for entering pause to avoid chatter near ROM endpoints.
+    let pauseVelocityThreshold: Float
+
     /// Number of samples to use for velocity smoothing.
     let windowSize: Int
 
+    /// Minimum seconds a phase must last before switching again (debounce).
+    let minimumPhaseDuration: Double
+
     private(set) var currentPhase: TempoPhase = .pauseTop
+    private var lastMovingPhase: TempoPhase = .concentric
+    private var lastTransitionTime: Double?
 
     private struct Sample {
         let angle: Float
@@ -22,15 +30,28 @@ final class TempoTracker {
 
     private var samples: [Sample] = []
 
-    init(velocityThreshold: Float = 15.0, windowSize: Int = 5) {
+    init(
+        velocityThreshold: Float = 15.0,
+        pauseVelocityThreshold: Float = 8.0,
+        windowSize: Int = 5,
+        minimumPhaseDuration: Double = 0.12
+    ) {
         self.velocityThreshold = velocityThreshold
+        self.pauseVelocityThreshold = min(pauseVelocityThreshold, velocityThreshold)
         self.windowSize = windowSize
+        self.minimumPhaseDuration = minimumPhaseDuration
     }
 
     /// Feed the current primary angle and frame timestamp. Returns the detected phase.
     @discardableResult
     func update(angle: Float, time: CMTime) -> TempoPhase {
-        let timeSec = CMTimeGetSeconds(time)
+        update(angle: angle, timestamp: CMTimeGetSeconds(time))
+    }
+
+    /// Feed current angle and wall-clock frame timestamp in seconds.
+    @discardableResult
+    func update(angle: Float, timestamp timeSec: Double) -> TempoPhase {
+        guard timeSec.isFinite else { return currentPhase }
         samples.append(Sample(angle: angle, time: timeSec))
 
         // Keep only the most recent samples
@@ -41,23 +62,36 @@ final class TempoTracker {
         guard samples.count >= 2 else { return currentPhase }
 
         let velocity = computeAngularVelocity()
+        let absVelocity = abs(velocity)
+        var desiredPhase = currentPhase
 
         if velocity < -velocityThreshold {
             // Angle decreasing = joint closing = eccentric (e.g., lowering into squat)
-            currentPhase = .eccentric
+            desiredPhase = .eccentric
         } else if velocity > velocityThreshold {
             // Angle increasing = joint opening = concentric (e.g., standing up)
-            currentPhase = .concentric
+            desiredPhase = .concentric
+        } else if absVelocity <= pauseVelocityThreshold {
+            // Enter pause only when truly near-zero, not just slightly slower.
+            desiredPhase = (lastMovingPhase == .eccentric) ? .pauseBottom : .pauseTop
         } else {
-            // Near-zero velocity = pause. Classify as bottom or top based on last moving phase.
-            switch currentPhase {
-            case .eccentric:
-                currentPhase = .pauseBottom
-            case .concentric:
-                currentPhase = .pauseTop
-            default:
-                break  // stay in current pause phase
+            // Deadband between thresholds: hold phase to suppress noise-driven toggles.
+            desiredPhase = currentPhase
+        }
+
+        let canTransition: Bool
+        if let lastTransitionTime {
+            canTransition = (timeSec - lastTransitionTime) >= minimumPhaseDuration
+        } else {
+            canTransition = true
+        }
+
+        if desiredPhase != currentPhase && canTransition {
+            currentPhase = desiredPhase
+            if desiredPhase == .eccentric || desiredPhase == .concentric {
+                lastMovingPhase = desiredPhase
             }
+            lastTransitionTime = timeSec
         }
 
         return currentPhase
@@ -66,6 +100,8 @@ final class TempoTracker {
     func reset() {
         samples.removeAll()
         currentPhase = .pauseTop
+        lastMovingPhase = .concentric
+        lastTransitionTime = nil
     }
 
     // MARK: - Private

@@ -92,6 +92,11 @@ struct PoseResult {
         landmarks[type]?.position
     }
 
+    /// Landmark visibility confidence (0-1).
+    func visibility(for type: PoseLandmarkType) -> Float {
+        landmarks[type]?.visibility ?? 0
+    }
+
     /// Metric 3D world position. Used for accurate angle calculations.
     func worldPosition(for type: PoseLandmarkType) -> SIMD3<Float>? {
         worldLandmarks[type]

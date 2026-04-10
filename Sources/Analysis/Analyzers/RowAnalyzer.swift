@@ -4,6 +4,8 @@ import simd
 /// Ported from row_analyzer.py.
 /// Tracks elbow angle, shoulder angle, spine line, back line, chest marker, and rep count.
 final class RowAnalyzer: ExerciseAnalyzer {
+    private let minimumPreferredVisibility: Float = 0.35
+    private let visibilityFallbackMargin: Float = 0.20
 
     let exerciseType: ExerciseType = .row
     let side: BodySide
@@ -24,25 +26,28 @@ final class RowAnalyzer: ExerciseAnalyzer {
     }
 
     func analyze(landmarks: PoseResult) -> FrameAnalysis {
-        guard let rawShoulder = landmarks.position(for: .shoulder(side)),
-              let rawElbow    = landmarks.position(for: .elbow(side)),
-              let rawWrist    = landmarks.position(for: .wrist(side)),
-              let rawHip      = landmarks.position(for: .hip(side)),
-              let rawOppShoulder = landmarks.position(for: .shoulder(side.opposite)) else {
+        let activeSide = resolvedSide(for: landmarks)
+
+        guard let rawShoulder = landmarks.position(for: .shoulder(activeSide)),
+              let rawElbow    = landmarks.position(for: .elbow(activeSide)),
+              let rawWrist    = landmarks.position(for: .wrist(activeSide)),
+              let rawHip      = landmarks.position(for: .hip(activeSide)) else {
             return .empty
         }
 
         let ts = landmarks.timestamp
-        let shoulder    = smoother.smooth(key: "\(side)_shoulder",          position: rawShoulder,    timestamp: ts)
-        let elbow       = smoother.smooth(key: "\(side)_elbow",             position: rawElbow,       timestamp: ts)
-        let wrist       = smoother.smooth(key: "\(side)_wrist",             position: rawWrist,       timestamp: ts)
-        let hip         = smoother.smooth(key: "\(side)_hip",               position: rawHip,         timestamp: ts)
-        let oppShoulder = smoother.smooth(key: "\(side.opposite)_shoulder", position: rawOppShoulder, timestamp: ts)
+        let shoulder    = smoother.smooth(key: "\(activeSide)_shoulder", position: rawShoulder, timestamp: ts)
+        let elbow       = smoother.smooth(key: "\(activeSide)_elbow",    position: rawElbow,    timestamp: ts)
+        let wrist       = smoother.smooth(key: "\(activeSide)_wrist",    position: rawWrist,    timestamp: ts)
+        let hip         = smoother.smooth(key: "\(activeSide)_hip",      position: rawHip,      timestamp: ts)
+        let oppShoulder = landmarks.position(for: .shoulder(activeSide.opposite)).map {
+            smoother.smooth(key: "\(activeSide.opposite)_shoulder", position: $0, timestamp: ts)
+        }
 
-        let w_shoulder = landmarks.worldPosition(for: .shoulder(side)).map { smoother.smooth3D(key: "\(side)_shoulder", position: $0, timestamp: ts) }
-        let w_elbow    = landmarks.worldPosition(for: .elbow(side))   .map { smoother.smooth3D(key: "\(side)_elbow",    position: $0, timestamp: ts) }
-        let w_wrist    = landmarks.worldPosition(for: .wrist(side))   .map { smoother.smooth3D(key: "\(side)_wrist",    position: $0, timestamp: ts) }
-        let w_hip      = landmarks.worldPosition(for: .hip(side))     .map { smoother.smooth3D(key: "\(side)_hip",      position: $0, timestamp: ts) }
+        let w_shoulder = landmarks.worldPosition(for: .shoulder(activeSide)).map { smoother.smooth3D(key: "\(activeSide)_shoulder", position: $0, timestamp: ts) }
+        let w_elbow    = landmarks.worldPosition(for: .elbow(activeSide))   .map { smoother.smooth3D(key: "\(activeSide)_elbow",    position: $0, timestamp: ts) }
+        let w_wrist    = landmarks.worldPosition(for: .wrist(activeSide))   .map { smoother.smooth3D(key: "\(activeSide)_wrist",    position: $0, timestamp: ts) }
+        let w_hip      = landmarks.worldPosition(for: .hip(activeSide))     .map { smoother.smooth3D(key: "\(activeSide)_hip",      position: $0, timestamp: ts) }
 
         let elbowAngle: Float
         if let ws = w_shoulder, let we = w_elbow, let ww = w_wrist {
@@ -58,9 +63,7 @@ final class RowAnalyzer: ExerciseAnalyzer {
             shoulderAngle = AngleCalculator.angle(a: hip, b: shoulder, c: elbow)
         }
 
-        repCounter.update(angle: elbowAngle)
-
-        let chest = (shoulder + oppShoulder) / 2.0
+        repCounter.update(angle: elbowAngle, timestamp: ts)
 
         var instructions: [OverlayInstruction] = []
 
@@ -70,24 +73,29 @@ final class RowAnalyzer: ExerciseAnalyzer {
         // Arm skeleton
         instructions.append(.line(from: shoulder, to: elbow, color: .yellow, width: 3))
         instructions.append(.line(from: elbow, to: wrist, color: .yellow, width: 3))
-
-        // Back line (shoulder to opposite shoulder)
-        instructions.append(.line(from: shoulder, to: oppShoulder, color: .magenta, width: 3))
+        instructions.append(.line(from: hip, to: shoulder, color: .green, width: 2))
 
         // Key joints
         instructions.append(.circle(at: elbow, radius: 10, color: .red, filled: true))
         instructions.append(.circle(at: shoulder, radius: 10, color: .red, filled: true))
-        instructions.append(.circle(at: chest, radius: 10, color: .orange, filled: true))
-        instructions.append(.circle(at: oppShoulder, radius: 8, color: .green, filled: true))
 
         // Angle labels
         let elbowLabel = SIMD2<Float>(elbow.x - 0.05, elbow.y + 0.05)
         let shoulderLabel = SIMD2<Float>(shoulder.x - 0.05, shoulder.y - 0.03)
-        let chestLabel = SIMD2<Float>(chest.x - 0.03, chest.y - 0.02)
 
         instructions.append(.text("Elbow: \(Int(elbowAngle))", at: elbowLabel, color: .white, size: 20))
         instructions.append(.text("Shoulder: \(Int(shoulderAngle))", at: shoulderLabel, color: .white, size: 20))
-        instructions.append(.text("Chest", at: chestLabel, color: .white, size: 20))
+
+        if let oppShoulder {
+            let chest = (shoulder + oppShoulder) / 2.0
+            let chestLabel = SIMD2<Float>(chest.x - 0.03, chest.y - 0.02)
+
+            // Back line (shoulder to opposite shoulder) and chest marker are optional.
+            instructions.append(.line(from: shoulder, to: oppShoulder, color: .magenta, width: 3))
+            instructions.append(.circle(at: chest, radius: 10, color: .orange, filled: true))
+            instructions.append(.circle(at: oppShoulder, radius: 8, color: .green, filled: true))
+            instructions.append(.text("Chest", at: chestLabel, color: .white, size: 20))
+        }
 
         // HUD
         instructions.append(.text("Reps: \(repCounter.count)", at: SIMD2(0.02, 0.05), color: .white, size: 24))
@@ -108,5 +116,29 @@ final class RowAnalyzer: ExerciseAnalyzer {
         smoother.reset()
         repCounter.reset()
         tempoTracker.reset()
+    }
+
+    private func resolvedSide(for landmarks: PoseResult) -> BodySide {
+        let preferredScore = visibilityScore(for: side, landmarks: landmarks)
+        let alternateSide = side.opposite
+        let alternateScore = visibilityScore(for: alternateSide, landmarks: landmarks)
+
+        guard alternateScore > 0 else { return side }
+        if preferredScore < minimumPreferredVisibility,
+           alternateScore > preferredScore + visibilityFallbackMargin {
+            return alternateSide
+        }
+
+        return side
+    }
+
+    private func visibilityScore(for side: BodySide, landmarks: PoseResult) -> Float {
+        let relevantLandmarks: [PoseLandmarkType] = [
+            .shoulder(side), .elbow(side), .wrist(side), .hip(side)
+        ]
+        let total = relevantLandmarks.reduce(Float.zero) { partial, landmark in
+            partial + landmarks.visibility(for: landmark)
+        }
+        return total / Float(relevantLandmarks.count)
     }
 }

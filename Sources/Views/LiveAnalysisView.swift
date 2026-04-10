@@ -17,6 +17,8 @@ final class LiveAnalysisViewModel: ObservableObject {
     @Published private(set) var currentPhase: TempoPhase?
     @Published private(set) var isRecording = false
     @Published private(set) var isAuthorized = false
+    @Published private(set) var trackingWarningVisible = false
+    @Published private(set) var cameraPosition: AVCaptureDevice.Position = .back
 
     let metalRenderer = MetalCameraRenderer()
 
@@ -28,6 +30,7 @@ final class LiveAnalysisViewModel: ObservableObject {
     private var _analyzer: ExerciseAnalyzer?
     private var _recorder: LiveVideoRecorder?
     private let recorderLock = NSLock()
+    private var lowTrackingStreak = 0
 
     init() {
         cameraService.onFrame = { [weak self] pixelBuffer, time in
@@ -40,6 +43,8 @@ final class LiveAnalysisViewModel: ObservableObject {
     func setAnalyzer(_ analyzer: ExerciseAnalyzer) {
         _analyzer?.reset()
         _analyzer = analyzer
+        lowTrackingStreak = 0
+        DispatchQueue.main.async { self.trackingWarningVisible = false }
     }
 
     func checkAuthorization() async {
@@ -54,6 +59,12 @@ final class LiveAnalysisViewModel: ObservableObject {
 
     func stop() {
         cameraService.stop()
+    }
+
+    func switchCamera() {
+        let newPosition: AVCaptureDevice.Position = (cameraPosition == .back) ? .front : .back
+        cameraPosition = newPosition
+        cameraService.configure(position: newPosition)
     }
 
     func startRecording() {
@@ -110,11 +121,20 @@ final class LiveAnalysisViewModel: ObservableObject {
         let instructions = frameAnalysis.overlayInstructions
         let reps         = frameAnalysis.repCount
         let phase        = frameAnalysis.tempoPhase
+        let hasTracking = poseResult != nil && !instructions.isEmpty
+
+        if hasTracking {
+            lowTrackingStreak = 0
+        } else {
+            lowTrackingStreak += 1
+        }
+        let shouldShowTrackingWarning = lowTrackingStreak >= 20
 
         DispatchQueue.main.async { [weak self] in
             self?.currentInstructions = instructions
             self?.repCount = reps
             self?.currentPhase = phase
+            self?.trackingWarningVisible = shouldShowTrackingWarning
         }
     }
 
@@ -265,6 +285,7 @@ struct LiveAnalysisView: View {
             VStack(spacing: 0) {
                 topBar
                 Spacer()
+                trackingWarningBanner
                 bottomBar
             }
         }
@@ -292,26 +313,67 @@ struct LiveAnalysisView: View {
     // MARK: - Sub-views
 
     private var topBar: some View {
-        VStack(spacing: 8) {
-            Picker("Exercise", selection: $selectedExerciseType) {
-                ForEach(ExerciseType.allCases) { type in
-                    Text(type.rawValue).tag(type)
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                Picker("Exercise", selection: $selectedExerciseType) {
+                    ForEach(ExerciseType.allCases) { type in
+                        Text(type.rawValue).tag(type)
+                    }
                 }
-            }
-            .pickerStyle(.menu)
-            .tint(.white)
-            .frame(maxWidth: .infinity, alignment: .leading)
+                .pickerStyle(.menu)
+                .tint(.white)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-            if selectedExercise.requiresSideSelection {
-                Picker("Side", selection: $selectedSide) {
-                    Text("Left").tag(BodySide.left)
-                    Text("Right").tag(BodySide.right)
+                if selectedExercise.requiresSideSelection {
+                    Picker("Side", selection: $selectedSide) {
+                        Text("Left").tag(BodySide.left)
+                        Text("Right").tag(BodySide.right)
+                    }
+                    .pickerStyle(.segmented)
                 }
-                .pickerStyle(.segmented)
+
+                if !viewModel.isRecording {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Before recording")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        Text(selectedExerciseType.cameraSetupTip)
+                            .font(.caption2)
+                            .foregroundStyle(.white.opacity(0.9))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 2)
+                }
             }
+
+            Button {
+                viewModel.switchCamera()
+            } label: {
+                Image(systemName: "arrow.triangle.2.circlepath.camera.fill")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(12)
+                    .background(.white.opacity(0.25))
+                    .clipShape(Circle())
+            }
+            .accessibilityLabel(viewModel.cameraPosition == .back ? "Switch to front camera" : "Switch to back camera")
         }
         .padding()
         .background(.ultraThinMaterial)
+    }
+
+    @ViewBuilder
+    private var trackingWarningBanner: some View {
+        if viewModel.trackingWarningVisible {
+            Text(selectedExerciseType.lowTrackingWarning)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.black)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(.yellow.opacity(0.9))
+                .clipShape(Capsule())
+                .padding(.bottom, 8)
+        }
     }
 
     private var bottomBar: some View {

@@ -1,8 +1,11 @@
-# KevLines 2.1 — On-Device Exercise Form Analysis
+# KevLines 2.2 — On-Device Exercise Form Analysis
 
 A fully local iOS app that analyzes exercise videos and overlays biomechanical feedback (joint angles, skeleton, rep counts, tempo phases) in real time using the device camera or saved videos. No server, no cloud, no network dependency.
 
 ## Changelog
+
+### v2.2.0 — Camera Switching
+- **Front/back camera toggle** — tap the camera flip button in the live analysis top bar to switch between front and back camera at any time; mirroring is applied automatically for the front camera
 
 ### v2.1.0 — Live Camera, 3D Angles, Adaptive Smoothing
 - **Live camera mode** — real-time skeleton overlay via Metal (`MTKView` + `CVMetalTextureCache`), SwiftUI Canvas on top for joint labels; record and export the annotated video without leaving the app
@@ -243,10 +246,12 @@ No server changes, no API updates, no deployment.
 - [x] Live camera analysis (real-time overlay via Metal)
 - [x] 3D angle calculations using MediaPipe world landmarks
 - [x] Advanced smoothing filters (1€ one-euro filter)
-- [ ] SwiftData persistence for workout history
-- [ ] Video export with audio track preservation
+- [ ] **Exercise library expansion** — deadlift, bench press, overhead press, lunge, hip hinge
+- [ ] **Movement assessments** — overhead squat screen, single-leg balance, thoracic rotation
 - [ ] Form scoring algorithm (per-rep quality score)
 - [ ] Apple Watch companion (rep counting via CoreMotion)
+- [ ] SwiftData persistence for workout history *(later)*
+- [ ] Video export with audio track preservation *(later/optional)*
 
 ---
 

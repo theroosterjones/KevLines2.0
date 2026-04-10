@@ -465,7 +465,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kevinjones.KevLines2-0";
 				PRODUCT_MODULE_NAME = KevLines2_0;
 				PRODUCT_NAME = KevLines2.0;
@@ -648,7 +648,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kevinjones.KevLines2-0";
 				PRODUCT_MODULE_NAME = KevLines2_0;
 				PRODUCT_NAME = KevLines2.0;

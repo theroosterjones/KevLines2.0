@@ -31,3 +31,27 @@ struct ExerciseConfig {
                        requiresSideSelection: false, defaultSide: .left),
     ]
 }
+
+// MARK: - Camera Setup Guidance
+
+extension ExerciseType {
+    /// Short setup guidance shown before analysis starts.
+    var cameraSetupTip: String {
+        switch self {
+        case .squat, .row, .latPulldown, .elbowCurl:
+            return "Use a strict side profile (about 90 deg). Keep the full working side visible from shoulder to ankle."
+        case .shoulderAssessment:
+            return "Use a strict front or back profile. Keep both shoulders and both hips fully visible and level in frame."
+        }
+    }
+
+    /// Non-blocking warning shown when pose tracking quality is persistently low.
+    var lowTrackingWarning: String {
+        switch self {
+        case .squat, .row, .latPulldown, .elbowCurl:
+            return "Tracking is unstable. Reposition camera to a strict side profile and keep your full body in frame."
+        case .shoulderAssessment:
+            return "Tracking is unstable. Use a strict front/back profile with both shoulders and hips clearly visible."
+        }
+    }
+}

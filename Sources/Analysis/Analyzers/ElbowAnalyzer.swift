@@ -44,7 +44,7 @@ final class ElbowAnalyzer: ExerciseAnalyzer {
             elbowAngle = AngleCalculator.angle(a: shoulder, b: elbow, c: wrist)
         }
 
-        repCounter.update(angle: elbowAngle)
+        repCounter.update(angle: elbowAngle, timestamp: ts)
         let frameTime = CMTimeMakeWithSeconds(landmarks.timestamp, preferredTimescale: 600)
         let phase = tempoTracker.update(angle: elbowAngle, time: frameTime)
 

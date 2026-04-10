@@ -43,7 +43,7 @@ final class SquatAnalyzer: ExerciseAnalyzer {
             kneeAngle = AngleCalculator.angle(a: hip, b: knee, c: ankle)
         }
 
-        repCounter.update(angle: kneeAngle)
+        repCounter.update(angle: kneeAngle, timestamp: ts)
 
         var instructions: [OverlayInstruction] = []
 
@@ -68,7 +68,7 @@ final class SquatAnalyzer: ExerciseAnalyzer {
             angles: [JointAngle(joint: .knee, degrees: kneeAngle)],
             repCount: repCounter.count,
             repState: repCounter.state,
-            tempoPhase: tempoTracker.update(angle: kneeAngle, time: .zero),
+            tempoPhase: tempoTracker.update(angle: kneeAngle, timestamp: ts),
             overlayInstructions: instructions
         )
     }

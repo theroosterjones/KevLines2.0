@@ -73,8 +73,8 @@ targets:
         PRODUCT_NAME: KevLines2.0
         PRODUCT_MODULE_NAME: KevLines2_0
         TARGETED_DEVICE_FAMILY: "1"
-        MARKETING_VERSION: "2.0.0"
-        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "2.2.0"
+        CURRENT_PROJECT_VERSION: "2"
         SWIFT_VERSION: "5.9"
         INFOPLIST_KEY_CFBundleDisplayName: "KevLines"
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "KevLines needs access to your photo library to select exercise videos for analysis."
