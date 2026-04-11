@@ -1,8 +1,15 @@
-# KevLines 2.2 — On-Device Exercise Form Analysis
+# KevLines 2.3 — On-Device Exercise Form Analysis
 
 A fully local iOS app that analyzes exercise videos and overlays biomechanical feedback (joint angles, skeleton, rep counts, tempo phases) in real time using the device camera or saved videos. No server, no cloud, no network dependency.
 
 ## Changelog
+
+### v2.3.0 — Exercise Library Expansion
+- **Deadlift** (side view) — tracks hip angle (shoulder→hip→knee) as the primary rep driver with secondary knee angle; tempo tracking on the hip hinge
+- **Lunge** (side view) — tracks front knee angle with trunk lean shown in HUD to flag excessive forward lean
+- **Hip Hinge (Side)** — focused hinge pattern for RDL, good mornings, and KB deadlift drills; overlays a vertical plumb line through the hip as a hinge cue
+- **Hip Hinge (Back)** — bilateral assessment mode tracking hip tilt, shoulder tilt, and knee valgus/varus per side; no rep counting
+- **Overhead Press** (front or back view, bilateral) — tracks both elbow angles independently with average-driven rep counting; torso lean shown in HUD and highlighted red if >15°
 
 ### v2.2.0 — Camera Switching
 - **Front/back camera toggle** — tap the camera flip button in the live analysis top bar to switch between front and back camera at any time; mirroring is applied automatically for the front camera
