@@ -24,7 +24,8 @@ final class VideoProcessor: ObservableObject {
     func process(
         inputURL: URL,
         outputURL: URL,
-        analyzer: ExerciseAnalyzer
+        analyzer: FrameAnalyzerProtocol,
+        overlayMode: OverlayMode = .simple
     ) async throws -> AnalysisSummary {
         await MainActor.run {
             isProcessing = true
@@ -57,9 +58,11 @@ final class VideoProcessor: ObservableObject {
             var allFrameResults: [FrameAnalysis] = []
             var poseDetections = 0
             var writeFailures = 0
+            let metricsCollector = RepMetricsCollector()
 
             while let (pixelBuffer, time) = reader.nextFrame() {
                 let timestampMs = Int(CMTimeGetSeconds(time) * 1000)
+                let timeSec = CMTimeGetSeconds(time)
 
                 let poseResult = poseLandmarker.detect(
                     pixelBuffer: pixelBuffer,
@@ -75,8 +78,26 @@ final class VideoProcessor: ObservableObject {
                 }
                 allFrameResults.append(frameResult)
 
+                // Feed rep metrics collector
+                let primaryAngle = frameResult.angles.first?.degrees ?? 0
+                metricsCollector.update(
+                    phase: frameResult.tempoPhase,
+                    angle: primaryAngle,
+                    repCount: frameResult.repCount,
+                    timestamp: timeSec
+                )
+
+                // Build final instruction list: base overlay + optional HUD
+                var finalInstructions = frameResult.overlayInstructions
+                if overlayMode == .fullHUD {
+                    finalInstructions.append(contentsOf:
+                        HUDOverlayBuilder.instructions(
+                            repCount: frameResult.repCount,
+                            collector: metricsCollector))
+                }
+
                 overlayRenderer.render(
-                    instructions: frameResult.overlayInstructions,
+                    instructions: finalInstructions,
                     onto: pixelBuffer
                 )
 
@@ -105,7 +126,12 @@ final class VideoProcessor: ObservableObject {
                 self.progress = 1.0
             }
 
-            return AnalysisSummary(from: allFrameResults, duration: CMTimeGetSeconds(reader.duration))
+            return AnalysisSummary(
+                from: allFrameResults,
+                duration: CMTimeGetSeconds(reader.duration),
+                repMetrics: metricsCollector.completedReps,
+                score: metricsCollector.computeScore()
+            )
         }.value
 
         return result

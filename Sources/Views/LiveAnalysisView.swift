@@ -19,15 +19,17 @@ final class LiveAnalysisViewModel: ObservableObject {
     @Published private(set) var isAuthorized = false
     @Published private(set) var trackingWarningVisible = false
     @Published private(set) var cameraPosition: AVCaptureDevice.Position = .back
+    @Published var overlayMode: OverlayMode = .simple
+    @Published private(set) var currentScore: Int?
 
     let metalRenderer = MetalCameraRenderer()
 
     private let cameraService = CameraService()
-    // Separate PoseLandmarkerService instance for live use (fresh timestamp sequence)
     private let poseLandmarker = PoseLandmarkerService()
     private let overlayRenderer = OverlayRenderer()
+    private let metricsCollector = RepMetricsCollector()
 
-    private var _analyzer: ExerciseAnalyzer?
+    private var _analyzer: FrameAnalyzerProtocol?
     private var _recorder: LiveVideoRecorder?
     private let recorderLock = NSLock()
     private var lowTrackingStreak = 0
@@ -40,11 +42,15 @@ final class LiveAnalysisViewModel: ObservableObject {
 
     // MARK: - Public Interface (called from main thread)
 
-    func setAnalyzer(_ analyzer: ExerciseAnalyzer) {
+    func setAnalyzer(_ analyzer: FrameAnalyzerProtocol) {
         _analyzer?.reset()
         _analyzer = analyzer
+        metricsCollector.reset()
         lowTrackingStreak = 0
-        DispatchQueue.main.async { self.trackingWarningVisible = false }
+        DispatchQueue.main.async {
+            self.trackingWarningVisible = false
+            self.currentScore = nil
+        }
     }
 
     func checkAuthorization() async {
@@ -98,6 +104,7 @@ final class LiveAnalysisViewModel: ObservableObject {
 
     private func processFrame(pixelBuffer: CVPixelBuffer, time: CMTime) {
         let timestampMs = Int(CMTimeGetSeconds(time) * 1000)
+        let timeSec = CMTimeGetSeconds(time)
 
         let poseResult = poseLandmarker.detect(pixelBuffer: pixelBuffer, timestampMs: timestampMs)
 
@@ -108,20 +115,39 @@ final class LiveAnalysisViewModel: ObservableObject {
             frameAnalysis = .empty
         }
 
+        // Feed rep metrics collector
+        let primaryAngle = frameAnalysis.angles.first?.degrees ?? 0
+        metricsCollector.update(
+            phase: frameAnalysis.tempoPhase,
+            angle: primaryAngle,
+            repCount: frameAnalysis.repCount,
+            timestamp: timeSec
+        )
+
+        // Build final instructions: base overlay + optional HUD
+        var finalInstructions = frameAnalysis.overlayInstructions
+        let mode = overlayMode
+        if mode == .fullHUD {
+            finalInstructions.append(contentsOf:
+                HUDOverlayBuilder.instructions(
+                    repCount: frameAnalysis.repCount,
+                    collector: metricsCollector))
+        }
+
         // Recording path: apply overlay to a copy, write to file
         let rec: LiveVideoRecorder? = recorderLock.withLock { _recorder }
         if let rec, let copy = clonePixelBuffer(pixelBuffer) {
-            overlayRenderer.render(instructions: frameAnalysis.overlayInstructions, onto: copy)
+            overlayRenderer.render(instructions: finalInstructions, onto: copy)
             rec.append(pixelBuffer: copy, at: time)
         }
 
         // Display path: push raw frame to Metal; SwiftUI Canvas draws overlay
         metalRenderer.update(pixelBuffer: pixelBuffer)
 
-        let instructions = frameAnalysis.overlayInstructions
         let reps         = frameAnalysis.repCount
         let phase        = frameAnalysis.tempoPhase
-        let hasTracking = poseResult != nil && !instructions.isEmpty
+        let hasTracking = poseResult != nil && !finalInstructions.isEmpty
+        let score = metricsCollector.computeScore()
 
         if hasTracking {
             lowTrackingStreak = 0
@@ -131,10 +157,11 @@ final class LiveAnalysisViewModel: ObservableObject {
         let shouldShowTrackingWarning = lowTrackingStreak >= 20
 
         DispatchQueue.main.async { [weak self] in
-            self?.currentInstructions = instructions
+            self?.currentInstructions = finalInstructions
             self?.repCount = reps
             self?.currentPhase = phase
             self?.trackingWarningVisible = shouldShowTrackingWarning
+            self?.currentScore = score
         }
     }
 
@@ -259,7 +286,9 @@ struct LiveAnalysisView: View {
 
     @StateObject private var viewModel = LiveAnalysisViewModel()
 
+    @State private var analysisCategory: AnalysisCategory = .exercise
     @State private var selectedExerciseType: ExerciseType = .squat
+    @State private var selectedAssessmentType: AssessmentType = .shoulderFlexion
     @State private var selectedSide: BodySide = .left
     @State private var showPermissionAlert = false
     @State private var savedVideoURL: URL?
@@ -269,19 +298,34 @@ struct LiveAnalysisView: View {
         ExerciseConfig.all.first { $0.type == selectedExerciseType } ?? ExerciseConfig.all[0]
     }
 
+    private var selectedAssessment: AssessmentConfig {
+        AssessmentConfig.all.first { $0.type == selectedAssessmentType } ?? AssessmentConfig.all[0]
+    }
+
+    private var isAssessmentMode: Bool { analysisCategory == .assessment }
+
+    private var currentRequiresSideSelection: Bool {
+        isAssessmentMode ? selectedAssessment.requiresSideSelection : selectedExercise.requiresSideSelection
+    }
+
+    private var currentCameraSetupTip: String {
+        isAssessmentMode ? selectedAssessmentType.cameraSetupTip : selectedExerciseType.cameraSetupTip
+    }
+
+    private var currentTrackingWarning: String {
+        isAssessmentMode ? selectedAssessmentType.lowTrackingWarning : selectedExerciseType.lowTrackingWarning
+    }
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            // Metal camera feed (full screen)
             MetalCameraView(renderer: viewModel.metalRenderer)
                 .ignoresSafeArea()
 
-            // Skeleton overlay drawn via SwiftUI Canvas
             OverlayCanvas(instructions: viewModel.currentInstructions)
                 .ignoresSafeArea()
 
-            // HUD controls
             VStack(spacing: 0) {
                 topBar
                 Spacer()
@@ -306,8 +350,10 @@ struct LiveAnalysisView: View {
         .sheet(isPresented: $showShareSheet) {
             if let url = savedVideoURL { ShareSheet(items: [url]) }
         }
-        .onChange(of: selectedExerciseType) { _, _ in reconfigure() }
-        .onChange(of: selectedSide)         { _, _ in reconfigure() }
+        .onChange(of: selectedExerciseType)    { _, _ in reconfigure() }
+        .onChange(of: selectedAssessmentType)  { _, _ in reconfigure() }
+        .onChange(of: selectedSide)            { _, _ in reconfigure() }
+        .onChange(of: analysisCategory)        { _, _ in reconfigure() }
     }
 
     // MARK: - Sub-views
@@ -315,16 +361,34 @@ struct LiveAnalysisView: View {
     private var topBar: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
-                Picker("Exercise", selection: $selectedExerciseType) {
-                    ForEach(ExerciseType.allCases) { type in
-                        Text(type.rawValue).tag(type)
+                Picker("Category", selection: $analysisCategory) {
+                    ForEach(AnalysisCategory.allCases, id: \.self) { cat in
+                        Text(cat.rawValue).tag(cat)
                     }
                 }
-                .pickerStyle(.menu)
-                .tint(.white)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .pickerStyle(.segmented)
 
-                if selectedExercise.requiresSideSelection {
+                if isAssessmentMode {
+                    Picker("Assessment", selection: $selectedAssessmentType) {
+                        ForEach(AssessmentType.allCases) { type in
+                            Text(type.rawValue).tag(type)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(.white)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    Picker("Exercise", selection: $selectedExerciseType) {
+                        ForEach(ExerciseType.allCases) { type in
+                            Text(type.rawValue).tag(type)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(.white)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                if currentRequiresSideSelection {
                     Picker("Side", selection: $selectedSide) {
                         Text("Left").tag(BodySide.left)
                         Text("Right").tag(BodySide.right)
@@ -334,10 +398,10 @@ struct LiveAnalysisView: View {
 
                 if !viewModel.isRecording {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Before recording")
+                        Text(isAssessmentMode ? "Setup" : "Before recording")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
-                        Text(selectedExerciseType.cameraSetupTip)
+                        Text(currentCameraSetupTip)
                             .font(.caption2)
                             .foregroundStyle(.white.opacity(0.9))
                     }
@@ -346,17 +410,35 @@ struct LiveAnalysisView: View {
                 }
             }
 
-            Button {
-                viewModel.switchCamera()
-            } label: {
-                Image(systemName: "arrow.triangle.2.circlepath.camera.fill")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .padding(12)
-                    .background(.white.opacity(0.25))
-                    .clipShape(Circle())
+            VStack(spacing: 8) {
+                Button {
+                    viewModel.switchCamera()
+                } label: {
+                    Image(systemName: "arrow.triangle.2.circlepath.camera.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(12)
+                        .background(.white.opacity(0.25))
+                        .clipShape(Circle())
+                }
+                .accessibilityLabel(viewModel.cameraPosition == .back ? "Switch to front camera" : "Switch to back camera")
+
+                if !isAssessmentMode {
+                    Button {
+                        viewModel.overlayMode = (viewModel.overlayMode == .simple) ? .fullHUD : .simple
+                    } label: {
+                        Image(systemName: viewModel.overlayMode == .fullHUD
+                            ? "gauge.with.dots.needle.bottom.100percent"
+                            : "gauge.with.dots.needle.bottom.50percent")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(10)
+                            .background(.white.opacity(0.25))
+                            .clipShape(Circle())
+                    }
+                    .accessibilityLabel(viewModel.overlayMode == .fullHUD ? "Switch to Simple overlay" : "Switch to Full HUD overlay")
+                }
             }
-            .accessibilityLabel(viewModel.cameraPosition == .back ? "Switch to front camera" : "Switch to back camera")
         }
         .padding()
         .background(.ultraThinMaterial)
@@ -365,7 +447,7 @@ struct LiveAnalysisView: View {
     @ViewBuilder
     private var trackingWarningBanner: some View {
         if viewModel.trackingWarningVisible {
-            Text(selectedExerciseType.lowTrackingWarning)
+            Text(currentTrackingWarning)
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.black)
                 .padding(.horizontal, 12)
@@ -378,16 +460,29 @@ struct LiveAnalysisView: View {
 
     private var bottomBar: some View {
         HStack(alignment: .center) {
-            // Rep counter
-            VStack(alignment: .leading, spacing: 2) {
-                Text("REPS")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Text("\(viewModel.repCount)")
-                    .font(.system(size: 44, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
+            if isAssessmentMode {
+                // Assessment mode: show live grade
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("GRADE")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    Text("—")
+                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+                .frame(minWidth: 80, alignment: .leading)
+            } else {
+                // Exercise mode: rep counter
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("REPS")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    Text("\(viewModel.repCount)")
+                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+                .frame(minWidth: 80, alignment: .leading)
             }
-            .frame(minWidth: 80, alignment: .leading)
 
             Spacer()
 
@@ -413,17 +508,28 @@ struct LiveAnalysisView: View {
 
             Spacer()
 
-            // Tempo phase
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("PHASE")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Text(viewModel.currentPhase?.rawValue.capitalized ?? "—")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.cyan)
-                    .multilineTextAlignment(.trailing)
+            if isAssessmentMode {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("ASSESSMENT")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    Text("Live")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.cyan)
+                }
+                .frame(minWidth: 80, alignment: .trailing)
+            } else {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("PHASE")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    Text(viewModel.currentPhase?.rawValue.capitalized ?? "—")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.cyan)
+                        .multilineTextAlignment(.trailing)
+                }
+                .frame(minWidth: 80, alignment: .trailing)
             }
-            .frame(minWidth: 80, alignment: .trailing)
         }
         .padding()
         .background(.ultraThinMaterial)
@@ -444,7 +550,12 @@ struct LiveAnalysisView: View {
     }
 
     private func reconfigure() {
-        let analyzer = selectedExercise.makeAnalyzer(side: selectedSide)
+        let analyzer: FrameAnalyzerProtocol
+        if isAssessmentMode {
+            analyzer = selectedAssessment.makeAnalyzer(side: selectedSide)
+        } else {
+            analyzer = selectedExercise.makeAnalyzer(side: selectedSide)
+        }
         viewModel.setAnalyzer(analyzer)
     }
 

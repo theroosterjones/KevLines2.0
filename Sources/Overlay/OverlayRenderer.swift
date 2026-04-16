@@ -111,8 +111,10 @@ final class OverlayRenderer {
         let line = CTLineCreateWithAttributedString(attrString)
 
         context.saveGState()
-        // Flip text right-side-up (we already flipped the whole context)
-        context.textPosition = CGPoint(x: x, y: y)
+        // Un-flip y locally so Core Text glyphs render right-side-up
+        context.translateBy(x: x, y: y)
+        context.scaleBy(x: 1, y: -1)
+        context.textPosition = .zero
         CTLineDraw(line, context)
         context.restoreGState()
     }

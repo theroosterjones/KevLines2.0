@@ -17,7 +17,8 @@ final class HipHingeBackAnalyzer: ExerciseAnalyzer {
             .shoulder(.left), .shoulder(.right),
             .hip(.left),      .hip(.right),
             .knee(.left),     .knee(.right),
-            .ankle(.left),    .ankle(.right)
+            .ankle(.left),    .ankle(.right),
+            .ear(.left),      .ear(.right)
         ]
     }
 
@@ -92,7 +93,19 @@ final class HipHingeBackAnalyzer: ExerciseAnalyzer {
         let shoulderMid = (lShoulder + rShoulder) / 2.0
         let hipMid      = (lHip + rHip) / 2.0
 
+        let lEar = landmarks.position(for: .ear(.left))
+            .map { smoother.smooth(key: "left_ear", position: $0, timestamp: ts) }
+        let rEar = landmarks.position(for: .ear(.right))
+            .map { smoother.smooth(key: "right_ear", position: $0, timestamp: ts) }
+        let earMid: SIMD2<Float>?
+        if let le = lEar, let re = rEar { earMid = (le + re) / 2.0 }
+        else { earMid = lEar ?? rEar }
+
         var instructions: [OverlayInstruction] = []
+
+        // Spine overlay using bilateral midpoints
+        instructions.append(contentsOf: SpineOverlay.instructions(
+            ear: earMid, shoulder: shoulderMid, hip: hipMid))
 
         // Horizontal reference through hip midpoint
         let refLeft  = SIMD2<Float>(hipMid.x - 0.18, hipMid.y)

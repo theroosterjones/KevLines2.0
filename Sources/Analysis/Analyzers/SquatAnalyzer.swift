@@ -9,7 +9,7 @@ final class SquatAnalyzer: ExerciseAnalyzer {
     let side: BodySide
 
     var requiredLandmarks: [PoseLandmarkType] {
-        [.hip(side), .knee(side), .ankle(side)]
+        [.shoulder(side), .hip(side), .knee(side), .ankle(side), .ear(side)]
     }
 
     private let smoother = LandmarkSmoother()
@@ -32,6 +32,11 @@ final class SquatAnalyzer: ExerciseAnalyzer {
         let knee  = smoother.smooth(key: "\(side)_knee",  position: rawKnee,  timestamp: ts)
         let ankle = smoother.smooth(key: "\(side)_ankle", position: rawAnkle, timestamp: ts)
 
+        let shoulder = landmarks.position(for: .shoulder(side))
+            .map { smoother.smooth(key: "\(side)_shoulder", position: $0, timestamp: ts) }
+        let ear = landmarks.position(for: .ear(side))
+            .map { smoother.smooth(key: "\(side)_ear", position: $0, timestamp: ts) }
+
         let w_hip   = landmarks.worldPosition(for: .hip(side))  .map { smoother.smooth3D(key: "\(side)_hip",   position: $0, timestamp: ts) }
         let w_knee  = landmarks.worldPosition(for: .knee(side)) .map { smoother.smooth3D(key: "\(side)_knee",  position: $0, timestamp: ts) }
         let w_ankle = landmarks.worldPosition(for: .ankle(side)).map { smoother.smooth3D(key: "\(side)_ankle", position: $0, timestamp: ts) }
@@ -47,7 +52,16 @@ final class SquatAnalyzer: ExerciseAnalyzer {
 
         var instructions: [OverlayInstruction] = []
 
+        // Spine overlay (drawn first so it sits behind joint labels)
+        if let shoulder {
+            instructions.append(contentsOf: SpineOverlay.instructions(
+                ear: ear, shoulder: shoulder, hip: hip))
+        }
+
         // Skeleton
+        if let shoulder {
+            instructions.append(.line(from: shoulder, to: hip, color: .green, width: 3))
+        }
         instructions.append(.line(from: hip, to: knee, color: .green, width: 3))
         instructions.append(.line(from: knee, to: ankle, color: .green, width: 3))
 
@@ -55,6 +69,9 @@ final class SquatAnalyzer: ExerciseAnalyzer {
         instructions.append(.circle(at: knee, radius: 12, color: .red, filled: true))
         instructions.append(.circle(at: hip, radius: 10, color: .yellow, filled: true))
         instructions.append(.circle(at: ankle, radius: 10, color: .yellow, filled: true))
+        if let shoulder {
+            instructions.append(.circle(at: shoulder, radius: 10, color: .yellow, filled: true))
+        }
 
         // Angle label
         instructions.append(.text("Knee: \(Int(kneeAngle))",

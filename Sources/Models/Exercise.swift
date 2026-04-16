@@ -47,6 +47,39 @@ struct ExerciseConfig {
     ]
 }
 
+// MARK: - Analysis Category
+
+enum AnalysisCategory: String, CaseIterable {
+    case exercise = "Exercises"
+    case assessment = "Assessments"
+}
+
+// MARK: - Assessment Configuration
+
+struct AssessmentConfig {
+    let type: AssessmentType
+    let displayName: String
+    let requiresSideSelection: Bool
+    let defaultSide: BodySide
+
+    func makeAnalyzer(side: BodySide) -> AssessmentAnalyzer {
+        switch type {
+        case .shoulderFlexion:    return ShoulderFlexionAssessment()
+        case .squatAssessment:    return SquatAssessmentAnalyzer()
+        case .hipHingeAssessment: return HipHingeAssessmentAnalyzer(side: side)
+        }
+    }
+
+    static let all: [AssessmentConfig] = [
+        AssessmentConfig(type: .shoulderFlexion,    displayName: "Shoulder Flexion",
+                         requiresSideSelection: false, defaultSide: .left),
+        AssessmentConfig(type: .squatAssessment,    displayName: "Squat Assessment",
+                         requiresSideSelection: false, defaultSide: .left),
+        AssessmentConfig(type: .hipHingeAssessment, displayName: "Hip Hinge Assessment",
+                         requiresSideSelection: true,  defaultSide: .left),
+    ]
+}
+
 // MARK: - Camera Setup Guidance
 
 extension ExerciseType {

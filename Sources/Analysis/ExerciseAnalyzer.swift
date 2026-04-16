@@ -18,6 +18,13 @@ enum ExerciseType: String, CaseIterable, Identifiable, Codable {
     var id: String { rawValue }
 }
 
+// MARK: - Overlay Mode
+
+enum OverlayMode: String, CaseIterable {
+    case simple = "Simple"
+    case fullHUD = "Full HUD"
+}
+
 // MARK: - Rep State
 
 enum RepState: String {
@@ -56,6 +63,7 @@ enum OverlayInstruction {
 
 enum OverlayColor {
     case white, red, green, blue, yellow, cyan, magenta, orange
+    case custom(r: Float, g: Float, b: Float, a: Float)
 
     var rgba: (Float, Float, Float, Float) {
         switch self {
@@ -67,6 +75,8 @@ enum OverlayColor {
         case .cyan:    return (0, 1, 1, 1)
         case .magenta: return (1, 0, 1, 1)
         case .orange:  return (1, 0.65, 0, 1)
+        case .custom(let r, let g, let b, let a):
+            return (r, g, b, a)
         }
     }
 }
@@ -95,13 +105,17 @@ struct AnalysisSummary {
     let totalReps: Int
     let averageAngles: [JointAngle]
     let duration: Double
-    let tempoBreakdown: [TempoPhase: Double]  // seconds spent in each phase
+    let tempoBreakdown: [TempoPhase: Double]
+    let perRepMetrics: [RepMetric]
+    let finalScore: Int?
 
-    init(from frames: [FrameAnalysis], duration: Double) {
+    init(from frames: [FrameAnalysis], duration: Double,
+         repMetrics: [RepMetric] = [], score: Int? = nil) {
         totalReps = frames.last?.repCount ?? 0
         self.duration = duration
+        self.perRepMetrics = repMetrics
+        self.finalScore = score
 
-        // Average each joint angle across all frames that have it
         var angleSums: [JointType: (sum: Float, count: Int)] = [:]
         for frame in frames {
             for angle in frame.angles {
@@ -111,7 +125,6 @@ struct AnalysisSummary {
         }
         averageAngles = angleSums.map { JointAngle(joint: $0.key, degrees: $0.value.sum / Float($0.value.count)) }
 
-        // Approximate tempo breakdown (frames per phase × frame duration)
         let frameDuration = frames.isEmpty ? 0 : duration / Double(frames.count)
         var breakdown: [TempoPhase: Double] = [:]
         for frame in frames {
@@ -123,13 +136,54 @@ struct AnalysisSummary {
     }
 }
 
-// MARK: - Analyzer Protocol
+// MARK: - Base Analyzer Protocol
 
-protocol ExerciseAnalyzer: AnyObject {
-    var exerciseType: ExerciseType { get }
-    var side: BodySide { get }
+/// Shared interface for both exercise analyzers and assessment analyzers.
+/// Allows VideoProcessor and LiveAnalysisViewModel to operate on either type.
+protocol FrameAnalyzerProtocol: AnyObject {
     var requiredLandmarks: [PoseLandmarkType] { get }
-
     func analyze(landmarks: PoseResult) -> FrameAnalysis
     func reset()
+}
+
+// MARK: - Exercise Analyzer Protocol
+
+protocol ExerciseAnalyzer: FrameAnalyzerProtocol {
+    var exerciseType: ExerciseType { get }
+    var side: BodySide { get }
+}
+
+// MARK: - HUD Overlay Builder
+
+/// Generates Full HUD overlay instructions (rep counter, tempo, score) from RepMetricsCollector state.
+/// Called by the pipeline after the analyzer produces its base FrameAnalysis.
+enum HUDOverlayBuilder {
+
+    static func instructions(repCount: Int, collector: RepMetricsCollector) -> [OverlayInstruction] {
+        var hud: [OverlayInstruction] = []
+
+        // Large rep counter
+        hud.append(.text("Rep \(repCount)",
+            at: SIMD2(0.02, 0.04), color: .white, size: 28))
+
+        // Tempo counter
+        let tempoStr = collector.currentTempoString()
+        hud.append(.text(tempoStr,
+            at: SIMD2(0.02, 0.12), color: .cyan, size: 20))
+
+        // Score
+        if let score = collector.computeScore() {
+            let scoreColor: OverlayColor
+            if score >= 80 { scoreColor = .green }
+            else if score >= 60 { scoreColor = .yellow }
+            else { scoreColor = .red }
+            hud.append(.text("Score: \(score)",
+                at: SIMD2(0.78, 0.04), color: scoreColor, size: 22))
+        } else {
+            hud.append(.text("Score: --",
+                at: SIMD2(0.78, 0.04), color: .white, size: 22))
+        }
+
+        return hud
+    }
 }

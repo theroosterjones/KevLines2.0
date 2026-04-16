@@ -10,6 +10,8 @@ struct WorkoutResult: Codable, Identifiable {
     let duration: Double
     let averageAngles: [JointAngle]
     let tempoBreakdown: [String: Double]  // TempoPhase.rawValue → seconds
+    let perRepMetrics: [RepMetric]
+    let finalScore: Int?
     let inputVideoURL: String?
     let outputVideoURL: String?
 
@@ -25,6 +27,8 @@ struct WorkoutResult: Codable, Identifiable {
         self.tempoBreakdown = Dictionary(
             uniqueKeysWithValues: summary.tempoBreakdown.map { ($0.key.rawValue, $0.value) }
         )
+        self.perRepMetrics = summary.perRepMetrics
+        self.finalScore = summary.finalScore
         self.inputVideoURL = inputVideoURL?.path
         self.outputVideoURL = outputVideoURL?.path
     }

@@ -11,7 +11,7 @@ final class HipHingeSideAnalyzer: ExerciseAnalyzer {
     let side: BodySide
 
     var requiredLandmarks: [PoseLandmarkType] {
-        [.shoulder(side), .hip(side), .knee(side), .ankle(side)]
+        [.shoulder(side), .hip(side), .knee(side), .ankle(side), .ear(side)]
     }
 
     private let smoother     = LandmarkSmoother()
@@ -35,6 +35,8 @@ final class HipHingeSideAnalyzer: ExerciseAnalyzer {
         let hip      = smoother.smooth(key: "\(side)_hip",      position: rawHip,      timestamp: ts)
         let knee     = smoother.smooth(key: "\(side)_knee",     position: rawKnee,     timestamp: ts)
         let ankle    = smoother.smooth(key: "\(side)_ankle",    position: rawAnkle,    timestamp: ts)
+        let ear      = landmarks.position(for: .ear(side))
+            .map { smoother.smooth(key: "\(side)_ear", position: $0, timestamp: ts) }
 
         let w_shoulder = landmarks.worldPosition(for: .shoulder(side)).map { smoother.smooth3D(key: "\(side)_shoulder", position: $0, timestamp: ts) }
         let w_hip      = landmarks.worldPosition(for: .hip(side))     .map { smoother.smooth3D(key: "\(side)_hip",      position: $0, timestamp: ts) }
@@ -66,6 +68,10 @@ final class HipHingeSideAnalyzer: ExerciseAnalyzer {
         repCounter.update(angle: hipAngle, timestamp: ts)
 
         var instructions: [OverlayInstruction] = []
+
+        // Spine overlay (behind other layers)
+        instructions.append(contentsOf: SpineOverlay.instructions(
+            ear: ear, shoulder: shoulder, hip: hip))
 
         // Vertical plumb line through hip (visual hinge cue)
         let plumbTop    = SIMD2<Float>(hip.x, hip.y - 0.20)

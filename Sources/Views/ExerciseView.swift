@@ -31,12 +31,16 @@ struct ExerciseView: View {
     @StateObject private var processor = VideoProcessor()
 
     @State private var analysisMode: AnalysisMode = .savedVideo
+    @State private var analysisCategory: AnalysisCategory = .exercise
     @State private var selectedExerciseType: ExerciseType = .squat
+    @State private var selectedAssessmentType: AssessmentType = .shoulderFlexion
     @State private var selectedSide: BodySide = .left
+    @State private var overlayMode: OverlayMode = .simple
     @State private var selectedVideoItem: PhotosPickerItem?
     @State private var selectedVideoURL: URL?
     @State private var analyzedVideoURL: URL?
     @State private var analysisSummary: AnalysisSummary?
+    @State private var assessmentMetrics: AssessmentMetrics?
     @State private var player: AVPlayer?
     @State private var isLoadingSelectedVideo = false
 
@@ -48,6 +52,18 @@ struct ExerciseView: View {
         ExerciseConfig.all.first { $0.type == selectedExerciseType } ?? ExerciseConfig.all[0]
     }
 
+    private var selectedAssessment: AssessmentConfig {
+        AssessmentConfig.all.first { $0.type == selectedAssessmentType } ?? AssessmentConfig.all[0]
+    }
+
+    private var currentRequiresSideSelection: Bool {
+        analysisCategory == .exercise ? selectedExercise.requiresSideSelection : selectedAssessment.requiresSideSelection
+    }
+
+    private var currentCameraSetupTip: String {
+        analysisCategory == .exercise ? selectedExerciseType.cameraSetupTip : selectedAssessmentType.cameraSetupTip
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -55,9 +71,13 @@ struct ExerciseView: View {
                     modePicker
 
                     if analysisMode == .savedVideo {
-                        exercisePicker
+                        categoryPicker
+                        exerciseOrAssessmentPicker
                         cameraSetupTipCard
                         sidePicker
+                        if analysisCategory == .exercise {
+                            overlayModePicker
+                        }
                         videoPickerButton
                         loadingVideoSection
                         videoPreview
@@ -70,7 +90,7 @@ struct ExerciseView: View {
                 }
                 .padding(.bottom, 40)
             }
-            .navigationTitle("KevLines 2.0")
+            .navigationTitle("KevLines 3.0")
             .alert("Error", isPresented: $showingError) {
                 Button("OK") { }
             } message: {
@@ -100,6 +120,16 @@ struct ExerciseView: View {
         .padding(.top, 8)
     }
 
+    private var categoryPicker: some View {
+        Picker("Category", selection: $analysisCategory) {
+            ForEach(AnalysisCategory.allCases, id: \.self) { cat in
+                Text(cat.rawValue).tag(cat)
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal)
+    }
+
     private var liveCameraButton: some View {
         NavigationLink(destination: LiveAnalysisView()) {
             Label("Start Live Analysis", systemImage: "camera.fill")
@@ -113,14 +143,25 @@ struct ExerciseView: View {
         .padding(.horizontal)
     }
 
-    private var exercisePicker: some View {
-        Picker("Exercise", selection: $selectedExerciseType) {
-            ForEach(ExerciseType.allCases) { type in
-                Text(type.rawValue).tag(type)
+    @ViewBuilder
+    private var exerciseOrAssessmentPicker: some View {
+        if analysisCategory == .exercise {
+            Picker("Exercise", selection: $selectedExerciseType) {
+                ForEach(ExerciseType.allCases) { type in
+                    Text(type.rawValue).tag(type)
+                }
             }
+            .pickerStyle(.menu)
+            .padding(.horizontal)
+        } else {
+            Picker("Assessment", selection: $selectedAssessmentType) {
+                ForEach(AssessmentType.allCases) { type in
+                    Text(type.rawValue).tag(type)
+                }
+            }
+            .pickerStyle(.menu)
+            .padding(.horizontal)
         }
-        .pickerStyle(.menu)
-        .padding(.horizontal)
     }
 
     @ViewBuilder
@@ -131,7 +172,7 @@ struct ExerciseView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Camera setup tip")
                     .font(.subheadline.weight(.semibold))
-                Text(selectedExerciseType.cameraSetupTip)
+                Text(currentCameraSetupTip)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -146,7 +187,7 @@ struct ExerciseView: View {
 
     @ViewBuilder
     private var sidePicker: some View {
-        if selectedExercise.requiresSideSelection {
+        if currentRequiresSideSelection {
             Picker("Side", selection: $selectedSide) {
                 Text("Left").tag(BodySide.left)
                 Text("Right").tag(BodySide.right)
@@ -154,6 +195,16 @@ struct ExerciseView: View {
             .pickerStyle(.segmented)
             .padding(.horizontal)
         }
+    }
+
+    private var overlayModePicker: some View {
+        Picker("Overlay", selection: $overlayMode) {
+            ForEach(OverlayMode.allCases, id: \.self) { mode in
+                Text(mode.rawValue).tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal)
     }
 
     private var videoPickerButton: some View {
@@ -238,37 +289,107 @@ struct ExerciseView: View {
 
     @ViewBuilder
     private var resultsSection: some View {
-        if let summary = analysisSummary {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Results")
-                    .font(.headline)
+        if let metrics = assessmentMetrics, analysisCategory == .assessment {
+            assessmentResultsCard(metrics)
+        } else if let summary = analysisSummary {
+            exerciseResultsCard(summary)
+        }
+    }
 
-                if selectedExerciseType == .shoulderAssessment {
-                    // Shoulder assessment: show tilt interpretation instead of rep count
-                    if let tilt = summary.averageAngles.first(where: { $0.joint == .shoulder }) {
-                        let absTilt = abs(tilt.degrees)
-                        let side = tilt.degrees >= 0 ? "Left" : "Right"
-                        Text("\(side) shoulder elevated  \(String(format: "%.1f", absTilt))° avg")
-                    }
-                } else {
-                    Text("Reps: \(summary.totalReps)")
+    private func exerciseResultsCard(_ summary: AnalysisSummary) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Results")
+                .font(.headline)
+
+            if selectedExerciseType == .shoulderAssessment {
+                if let tilt = summary.averageAngles.first(where: { $0.joint == .shoulder }) {
+                    let absTilt = abs(tilt.degrees)
+                    let elevSide = tilt.degrees >= 0 ? "Left" : "Right"
+                    Text("\(elevSide) shoulder elevated  \(String(format: "%.1f", absTilt))° avg")
                 }
+            } else {
+                Text("Reps: \(summary.totalReps)")
+            }
 
-                Text("Duration: \(String(format: "%.1f", summary.duration))s")
+            if let score = summary.finalScore {
+                Text("Score: \(score)/100")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(score >= 80 ? .green : score >= 60 ? .yellow : .red)
+            }
 
-                ForEach(summary.averageAngles, id: \.joint) { angle in
-                    if selectedExerciseType == .shoulderAssessment, angle.joint == .shoulder {
-                        // Already shown above in interpreted form; skip raw line
-                    } else {
-                        Text("Avg \(angle.joint.rawValue): \(Int(angle.degrees))\u{00B0}")
-                    }
+            Text("Duration: \(String(format: "%.1f", summary.duration))s")
+
+            ForEach(summary.averageAngles, id: \.joint) { angle in
+                if selectedExerciseType == .shoulderAssessment, angle.joint == .shoulder {
+                } else {
+                    Text("Avg \(angle.joint.rawValue): \(Int(angle.degrees))\u{00B0}")
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
-            .background(Color(.systemGray6))
-            .cornerRadius(12)
-            .padding(.horizontal)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+        .padding(.horizontal)
+    }
+
+    private func assessmentResultsCard(_ metrics: AssessmentMetrics) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Assessment Results")
+                    .font(.headline)
+                Spacer()
+                Text(metrics.grade.rawValue)
+                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .foregroundStyle(gradeColor(metrics.grade))
+            }
+
+            ForEach(metrics.subGrades, id: \.label) { sub in
+                HStack {
+                    Text(sub.label)
+                        .font(.subheadline)
+                    Spacer()
+                    Text(sub.grade.rawValue)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(gradeColor(sub.grade))
+                }
+            }
+
+            if let left = metrics.leftROM, let right = metrics.rightROM {
+                HStack {
+                    Text("Left: \(Int(left))°")
+                    Spacer()
+                    Text("Right: \(Int(right))°")
+                }
+                .font(.subheadline)
+            }
+
+            if metrics.asymmetryFlag, let asymm = metrics.asymmetryDeg {
+                Text("Asymmetry: \(Int(asymm))° difference")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+
+            ForEach(metrics.details, id: \.self) { detail in
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+        .padding(.horizontal)
+    }
+
+    private func gradeColor(_ grade: LetterGrade) -> Color {
+        switch grade {
+        case .A: return .green
+        case .B: return Color(red: 0.6, green: 1.0, blue: 0.2)
+        case .C: return .yellow
+        case .D: return .orange
+        case .F: return .red
         }
     }
 
@@ -341,21 +462,35 @@ struct ExerciseView: View {
         let outputURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("analyzed_\(UUID().uuidString).mp4")
 
-        let analyzer = selectedExercise.makeAnalyzer(side: selectedSide)
+        let analyzer: FrameAnalyzerProtocol
+        let assessmentAnalyzerRef: AssessmentAnalyzer?
+
+        if analysisCategory == .assessment {
+            let aa = selectedAssessment.makeAnalyzer(side: selectedSide)
+            analyzer = aa
+            assessmentAnalyzerRef = aa
+        } else {
+            analyzer = selectedExercise.makeAnalyzer(side: selectedSide)
+            assessmentAnalyzerRef = nil
+        }
 
         do {
             let summary = try await processor.process(
                 inputURL: inputURL,
                 outputURL: outputURL,
-                analyzer: analyzer
+                analyzer: analyzer,
+                overlayMode: analysisCategory == .exercise ? overlayMode : .simple
             )
 
             let outputAsset = AVURLAsset(url: outputURL)
             let outputDuration = CMTimeGetSeconds(outputAsset.duration)
             logger.info("Output video duration: \(outputDuration)s at \(outputURL.lastPathComponent)")
 
+            let metrics = assessmentAnalyzerRef?.currentMetrics()
+
             await MainActor.run {
                 analysisSummary = summary
+                assessmentMetrics = metrics
                 analyzedVideoURL = outputURL
                 player = AVPlayer(url: outputURL)
             }

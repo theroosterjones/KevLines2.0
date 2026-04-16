@@ -10,7 +10,7 @@ final class LungeAnalyzer: ExerciseAnalyzer {
     let side: BodySide
 
     var requiredLandmarks: [PoseLandmarkType] {
-        [.hip(side), .knee(side), .ankle(side), .shoulder(side)]
+        [.hip(side), .knee(side), .ankle(side), .shoulder(side), .ear(side)]
     }
 
     private let smoother     = LandmarkSmoother()
@@ -34,6 +34,8 @@ final class LungeAnalyzer: ExerciseAnalyzer {
         let knee     = smoother.smooth(key: "\(side)_knee",     position: rawKnee,     timestamp: ts)
         let ankle    = smoother.smooth(key: "\(side)_ankle",    position: rawAnkle,    timestamp: ts)
         let shoulder = smoother.smooth(key: "\(side)_shoulder", position: rawShoulder, timestamp: ts)
+        let ear      = landmarks.position(for: .ear(side))
+            .map { smoother.smooth(key: "\(side)_ear", position: $0, timestamp: ts) }
 
         let w_hip      = landmarks.worldPosition(for: .hip(side))     .map { smoother.smooth3D(key: "\(side)_hip",      position: $0, timestamp: ts) }
         let w_knee     = landmarks.worldPosition(for: .knee(side))    .map { smoother.smooth3D(key: "\(side)_knee",     position: $0, timestamp: ts) }
@@ -64,6 +66,10 @@ final class LungeAnalyzer: ExerciseAnalyzer {
         repCounter.update(angle: kneeAngle, timestamp: ts)
 
         var instructions: [OverlayInstruction] = []
+
+        // Spine overlay (behind joint labels)
+        instructions.append(contentsOf: SpineOverlay.instructions(
+            ear: ear, shoulder: shoulder, hip: hip))
 
         // Torso and leg skeleton
         instructions.append(.line(from: shoulder, to: hip,   color: .green,  width: 3))
