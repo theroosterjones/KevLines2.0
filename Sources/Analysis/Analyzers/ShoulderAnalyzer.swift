@@ -49,6 +49,16 @@ final class ShoulderAnalyzer: ExerciseAnalyzer {
         let leftHip       = smoother.smooth(key: "left_hip",       position: rawLeftHip,       timestamp: ts)
         let rightHip      = smoother.smooth(key: "right_hip",      position: rawRightHip,      timestamp: ts)
 
+        // Ears are optional — used only as the cervical anchor of the spine
+        // overlay. Falls back to either available side, or no cervical extension.
+        let leftEar = landmarks.position(for: .ear(.left))
+            .map { smoother.smooth(key: "left_ear", position: $0, timestamp: ts) }
+        let rightEar = landmarks.position(for: .ear(.right))
+            .map { smoother.smooth(key: "right_ear", position: $0, timestamp: ts) }
+        let earMid: SIMD2<Float>?
+        if let le = leftEar, let re = rightEar { earMid = (le + re) / 2.0 }
+        else { earMid = leftEar ?? rightEar }
+
         let wLeftShoulder  = landmarks.worldPosition(for: .shoulder(.left)) .map { smoother.smooth3D(key: "left_shoulder",  position: $0, timestamp: ts) }
         let wRightShoulder = landmarks.worldPosition(for: .shoulder(.right)).map { smoother.smooth3D(key: "right_shoulder", position: $0, timestamp: ts) }
         let wLeftHip       = landmarks.worldPosition(for: .hip(.left))      .map { smoother.smooth3D(key: "left_hip",       position: $0, timestamp: ts) }
@@ -104,6 +114,11 @@ final class ShoulderAnalyzer: ExerciseAnalyzer {
 
         var instructions: [OverlayInstruction] = []
 
+        // Spine overlay (ear midpoint → shoulder midpoint → mid-spine → hip midpoint).
+        // Drawn first so reference lines and the shoulder girdle sit on top of it.
+        instructions.append(contentsOf: SpineOverlay.instructions(
+            ear: earMid, shoulder: shoulderMid, hip: hipMid))
+
         // Horizontal reference line through shoulder midpoint
         let refLeft  = SIMD2<Float>(shoulderMid.x - 0.18, shoulderMid.y)
         let refRight = SIMD2<Float>(shoulderMid.x + 0.18, shoulderMid.y)
@@ -111,9 +126,6 @@ final class ShoulderAnalyzer: ExerciseAnalyzer {
 
         // Pelvis / hip level line (reference baseline)
         instructions.append(.line(from: leftHip, to: rightHip, color: .cyan, width: 2))
-
-        // Spine reference line (shoulder midpoint → hip midpoint)
-        instructions.append(.line(from: shoulderMid, to: hipMid, color: .green, width: 2))
 
         // Shoulder girdle line (primary measurement)
         instructions.append(.line(from: leftShoulder, to: rightShoulder, color: .yellow, width: 4))

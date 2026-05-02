@@ -40,6 +40,8 @@ final class RowAnalyzer: ExerciseAnalyzer {
         let elbow       = smoother.smooth(key: "\(activeSide)_elbow",    position: rawElbow,    timestamp: ts)
         let wrist       = smoother.smooth(key: "\(activeSide)_wrist",    position: rawWrist,    timestamp: ts)
         let hip         = smoother.smooth(key: "\(activeSide)_hip",      position: rawHip,      timestamp: ts)
+        let ear         = landmarks.position(for: .ear(activeSide))
+            .map { smoother.smooth(key: "\(activeSide)_ear", position: $0, timestamp: ts) }
         let oppShoulder = landmarks.position(for: .shoulder(activeSide.opposite)).map {
             smoother.smooth(key: "\(activeSide.opposite)_shoulder", position: $0, timestamp: ts)
         }
@@ -67,13 +69,17 @@ final class RowAnalyzer: ExerciseAnalyzer {
 
         var instructions: [OverlayInstruction] = []
 
+        // Spine overlay (ear → shoulder → mid-spine → hip). Drawn first so the
+        // arm skeleton sits on top of it.
+        instructions.append(contentsOf: SpineOverlay.instructions(
+            ear: ear, shoulder: shoulder, hip: hip))
+
         // Extended forearm line (background)
         instructions.append(.extendedLine(from: wrist, through: elbow, color: .cyan, width: 2))
 
         // Arm skeleton
         instructions.append(.line(from: shoulder, to: elbow, color: .yellow, width: 3))
         instructions.append(.line(from: elbow, to: wrist, color: .yellow, width: 3))
-        instructions.append(.line(from: hip, to: shoulder, color: .green, width: 2))
 
         // Key joints
         instructions.append(.circle(at: elbow, radius: 10, color: .red, filled: true))
@@ -107,7 +113,7 @@ final class RowAnalyzer: ExerciseAnalyzer {
             ],
             repCount: repCounter.count,
             repState: repCounter.state,
-            tempoPhase: nil,  // TODO: wire up tempoTracker once primary angle is decided
+            tempoPhase: tempoTracker.update(angle: elbowAngle, timestamp: ts),
             overlayInstructions: instructions
         )
     }

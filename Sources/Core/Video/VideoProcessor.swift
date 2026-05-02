@@ -40,15 +40,18 @@ final class VideoProcessor: ObservableObject {
 
         let reader = try VideoReader(url: inputURL)
 
+        // Reader emits already-rotated buffers in display orientation, so the
+        // writer dimensions must match `outputWidth/Height` and the rotation
+        // transform must be identity to avoid double-rotation on playback.
         let writer = try VideoWriter(
             outputURL: outputURL,
-            width: reader.nativeWidth,
-            height: reader.nativeHeight,
+            width: reader.outputWidth,
+            height: reader.outputHeight,
             fps: reader.fps,
-            transform: reader.preferredTransform
+            transform: reader.outputTransform
         )
 
-        logger.info("Pipeline start: \(reader.nativeWidth)x\(reader.nativeHeight), ~\(reader.estimatedFrameCount) frames, \(CMTimeGetSeconds(reader.duration))s")
+        logger.info("Pipeline start: \(reader.outputWidth)x\(reader.outputHeight) (native \(reader.nativeWidth)x\(reader.nativeHeight)), ~\(reader.estimatedFrameCount) frames, \(CMTimeGetSeconds(reader.duration))s")
 
         analyzer.reset()
 

@@ -49,6 +49,17 @@ final class OverheadPressAnalyzer: ExerciseAnalyzer {
         let lHip      = smoother.smooth(key: "left_hip",       position: rawLH, timestamp: ts)
         let rHip      = smoother.smooth(key: "right_hip",      position: rawRH, timestamp: ts)
 
+        // Ears are optional — when both are visible we use the midpoint to anchor
+        // the cervical end of the spine overlay; otherwise we fall back to either
+        // available ear, or skip the cervical extension entirely.
+        let lEar = landmarks.position(for: .ear(.left))
+            .map { smoother.smooth(key: "left_ear", position: $0, timestamp: ts) }
+        let rEar = landmarks.position(for: .ear(.right))
+            .map { smoother.smooth(key: "right_ear", position: $0, timestamp: ts) }
+        let earMid: SIMD2<Float>?
+        if let le = lEar, let re = rEar { earMid = (le + re) / 2.0 }
+        else { earMid = lEar ?? rEar }
+
         let wLS = landmarks.worldPosition(for: .shoulder(.left)) .map { smoother.smooth3D(key: "left_shoulder",  position: $0, timestamp: ts) }
         let wLE = landmarks.worldPosition(for: .elbow(.left))    .map { smoother.smooth3D(key: "left_elbow",     position: $0, timestamp: ts) }
         let wLW = landmarks.worldPosition(for: .wrist(.left))    .map { smoother.smooth3D(key: "left_wrist",     position: $0, timestamp: ts) }
@@ -86,8 +97,10 @@ final class OverheadPressAnalyzer: ExerciseAnalyzer {
 
         var instructions: [OverlayInstruction] = []
 
-        // Torso spine line
-        instructions.append(.line(from: shoulderMid, to: hipMid, color: .green, width: 2))
+        // Spine overlay (ear midpoint → shoulder midpoint → mid-spine → hip midpoint).
+        // Drawn first so the arm skeleton and shoulder girdle sit on top of it.
+        instructions.append(contentsOf: SpineOverlay.instructions(
+            ear: earMid, shoulder: shoulderMid, hip: hipMid))
 
         // Shoulder girdle
         instructions.append(.line(from: lShoulder, to: rShoulder, color: .yellow, width: 3))

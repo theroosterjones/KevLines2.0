@@ -210,29 +210,3 @@ final class SquatAssessmentAnalyzer: AssessmentAnalyzer {
         kneeHysteresis = GradeHysteresis()
     }
 }
-
-/// Prevents color flickering near grade boundaries by requiring N consecutive frames
-/// at a new grade before switching.
-private struct GradeHysteresis {
-    private var current: LetterGrade = .F
-    private var candidate: LetterGrade = .F
-    private var count = 0
-    private let threshold = 5
-
-    mutating func update(_ newGrade: LetterGrade) -> LetterGrade {
-        if newGrade == current {
-            count = 0
-            candidate = current
-        } else if newGrade == candidate {
-            count += 1
-            if count >= threshold {
-                current = newGrade
-                count = 0
-            }
-        } else {
-            candidate = newGrade
-            count = 1
-        }
-        return current
-    }
-}

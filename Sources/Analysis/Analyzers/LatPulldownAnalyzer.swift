@@ -33,6 +33,8 @@ final class LatPulldownAnalyzer: ExerciseAnalyzer {
         let elbow    = smoother.smooth(key: "\(side)_elbow",    position: rawElbow,    timestamp: ts)
         let wrist    = smoother.smooth(key: "\(side)_wrist",    position: rawWrist,    timestamp: ts)
         let hip      = smoother.smooth(key: "\(side)_hip",      position: rawHip,      timestamp: ts)
+        let ear      = landmarks.position(for: .ear(side))
+            .map { smoother.smooth(key: "\(side)_ear", position: $0, timestamp: ts) }
 
         let w_shoulder = landmarks.worldPosition(for: .shoulder(side)).map { smoother.smooth3D(key: "\(side)_shoulder", position: $0, timestamp: ts) }
         let w_elbow    = landmarks.worldPosition(for: .elbow(side))   .map { smoother.smooth3D(key: "\(side)_elbow",    position: $0, timestamp: ts) }
@@ -57,13 +59,17 @@ final class LatPulldownAnalyzer: ExerciseAnalyzer {
 
         var instructions: [OverlayInstruction] = []
 
+        // Spine overlay (ear → shoulder → mid-spine → hip). Drawn first so the
+        // arm skeleton sits on top of it.
+        instructions.append(contentsOf: SpineOverlay.instructions(
+            ear: ear, shoulder: shoulder, hip: hip))
+
         // Extended forearm line
         instructions.append(.extendedLine(from: wrist, through: elbow, color: .cyan, width: 2))
 
         // Arm skeleton
         instructions.append(.line(from: shoulder, to: elbow, color: .yellow, width: 3))
         instructions.append(.line(from: elbow, to: wrist, color: .yellow, width: 3))
-        instructions.append(.line(from: hip, to: shoulder, color: .green, width: 2))
 
         // Key joints
         instructions.append(.circle(at: elbow, radius: 10, color: .red, filled: true))

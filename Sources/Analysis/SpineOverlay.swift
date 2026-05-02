@@ -18,7 +18,7 @@ struct SpineOverlay {
         ear: SIMD2<Float>?,
         shoulder: SIMD2<Float>,
         hip: SIMD2<Float>,
-        color: OverlayColor = .magenta,
+        color: OverlayColor = .spine,
         lineWidth: Float = 2.0,
         showDots: Bool = true
     ) -> [OverlayInstruction] {

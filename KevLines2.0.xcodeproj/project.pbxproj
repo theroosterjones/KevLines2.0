@@ -39,13 +39,17 @@
 		B05300B5846CD89AAE55C9D5 /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD774CC33747AEBBC54D54C /* VideoProcessor.swift */; };
 		B2B64A40ABB0A51B2E23E338 /* HipHingeAssessmentAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A77E5CB865AE14922A62582 /* HipHingeAssessmentAnalyzer.swift */; };
 		B47E7AC8C508ADF39308F44A /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7270CA7BAEEE484B50F60704 /* CameraService.swift */; };
+		C43A8BB0F6B5D254BD9920C8 /* ShoulderFlexionSagittalAssessment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0286C0E5C7D5ACC309F9A855 /* ShoulderFlexionSagittalAssessment.swift */; };
 		C65365314CC643DD871ADD8D /* ExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA949C722622B3B489370A7A /* ExerciseView.swift */; };
 		C7A7FF839004D241B75CE903 /* pose_landmarker_full.task in Resources */ = {isa = PBXBuildFile; fileRef = A376ABE354BD8457CEB30C65 /* pose_landmarker_full.task */; };
 		CDC2ECFBDF791BE0E9C1ABF4 /* LungeAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7104A36B6142C427F26FDBE0 /* LungeAnalyzer.swift */; };
 		CF0BC0BEEF9F82B643D1AEF5 /* SpineOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60F46410413DF19C9535C8E8 /* SpineOverlay.swift */; };
+		D0F69DFC29626975CAC74A58 /* SquatSagittalAssessment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB22B1E6E2ABF6BE6FF17663 /* SquatSagittalAssessment.swift */; };
 		D3EBDFA85E87B597ACB0EC31 /* LatPulldownAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C32D18EB4D8B9453C9BF056 /* LatPulldownAnalyzer.swift */; };
 		D41146EFA02918150060AE63 /* OverlayRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7DA897E91B1C74218C6829D /* OverlayRenderer.swift */; };
+		D791C336A2991B5B2CC55FBA /* AssessmentPlanesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB6D0B37180A54813AF4D9AA /* AssessmentPlanesTests.swift */; };
 		D839E7CE68CFEBFB4409F0FF /* WorkoutHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8293F702B27BE46ECC67C9B8 /* WorkoutHistoryView.swift */; };
+		DD9A9F7D2D5C6D3F524A500F /* HipHingeFrontalAssessment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5263D166C3B0C303BAC8F80C /* HipHingeFrontalAssessment.swift */; };
 		E2AA48296C66E90780C69385 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6C64676AD75EB35930986B /* SettingsView.swift */; };
 		E9BA01B36BADEFCA69B7677D /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC19F3EC3EFC6E5979BF922 /* Exercise.swift */; };
 		EC87AFBD927891BEBFADB7C1 /* VideoWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34F4A8435089BEE7F977723B /* VideoWriter.swift */; };
@@ -67,6 +71,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0286C0E5C7D5ACC309F9A855 /* ShoulderFlexionSagittalAssessment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoulderFlexionSagittalAssessment.swift; sourceTree = "<group>"; };
 		105AC656796E7FFED70AEAC7 /* AngleCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AngleCalculatorTests.swift; sourceTree = "<group>"; };
 		18DBB0119D5FAB1C9AE07B9C /* AnalysisResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisResult.swift; sourceTree = "<group>"; };
 		19A58E5F0BF0916EF41F84CD /* RepCounterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepCounterTests.swift; sourceTree = "<group>"; };
@@ -76,6 +81,7 @@
 		3DA9752ADE0D7DEBD2C65ADC /* ShoulderFlexionAssessment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoulderFlexionAssessment.swift; sourceTree = "<group>"; };
 		4D7CACBB8D072244F5EFC872 /* MetalCameraRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalCameraRenderer.swift; sourceTree = "<group>"; };
 		516414BA06A9A4FC972CA10B /* RowAnalyzerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowAnalyzerTests.swift; sourceTree = "<group>"; };
+		5263D166C3B0C303BAC8F80C /* HipHingeFrontalAssessment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HipHingeFrontalAssessment.swift; sourceTree = "<group>"; };
 		594A25392AA29D9ED0C7CF0B /* HipHingeBackAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HipHingeBackAnalyzer.swift; sourceTree = "<group>"; };
 		5A609E5C32772A7E58BBA9E5 /* RepMetricsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepMetricsTests.swift; sourceTree = "<group>"; };
 		5A77E5CB865AE14922A62582 /* HipHingeAssessmentAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HipHingeAssessmentAnalyzer.swift; sourceTree = "<group>"; };
@@ -105,12 +111,14 @@
 		A90354545ABE21C88DD4714B /* PoseLandmarkerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoseLandmarkerService.swift; sourceTree = "<group>"; };
 		AA949C722622B3B489370A7A /* ExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseView.swift; sourceTree = "<group>"; };
 		AAC19F3EC3EFC6E5979BF922 /* Exercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exercise.swift; sourceTree = "<group>"; };
+		AB22B1E6E2ABF6BE6FF17663 /* SquatSagittalAssessment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SquatSagittalAssessment.swift; sourceTree = "<group>"; };
 		B1F7E10E18A69E886D996337 /* RepCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepCounter.swift; sourceTree = "<group>"; };
 		B7600EECF04F28C8B60EC9C0 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		B7B7329D705E3473DB05D0FA /* AssessmentAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssessmentAnalyzer.swift; sourceTree = "<group>"; };
 		C58FEA92B3E558974E7739C1 /* HipHingeSideAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HipHingeSideAnalyzer.swift; sourceTree = "<group>"; };
 		CAB6C3ABA6C589A5A6AC5DCF /* RowAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowAnalyzer.swift; sourceTree = "<group>"; };
 		D7DA897E91B1C74218C6829D /* OverlayRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayRenderer.swift; sourceTree = "<group>"; };
+		DB6D0B37180A54813AF4D9AA /* AssessmentPlanesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssessmentPlanesTests.swift; sourceTree = "<group>"; };
 		DB9637BD9203004FE7F44DFE /* KevLines2.0Tests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KevLines2.0Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF04D86E9DDDDE63553BD0FB /* VideoReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoReader.swift; sourceTree = "<group>"; };
 		E5994672B25B9F0EE77C9BA1 /* LiveVideoRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveVideoRecorder.swift; sourceTree = "<group>"; };
@@ -136,6 +144,7 @@
 				861347630F4185FB437966F8 /* ElbowAnalyzer.swift */,
 				5A77E5CB865AE14922A62582 /* HipHingeAssessmentAnalyzer.swift */,
 				594A25392AA29D9ED0C7CF0B /* HipHingeBackAnalyzer.swift */,
+				5263D166C3B0C303BAC8F80C /* HipHingeFrontalAssessment.swift */,
 				C58FEA92B3E558974E7739C1 /* HipHingeSideAnalyzer.swift */,
 				7C32D18EB4D8B9453C9BF056 /* LatPulldownAnalyzer.swift */,
 				7104A36B6142C427F26FDBE0 /* LungeAnalyzer.swift */,
@@ -143,8 +152,10 @@
 				CAB6C3ABA6C589A5A6AC5DCF /* RowAnalyzer.swift */,
 				68C81DC9EB80D095D405993F /* ShoulderAnalyzer.swift */,
 				3DA9752ADE0D7DEBD2C65ADC /* ShoulderFlexionAssessment.swift */,
+				0286C0E5C7D5ACC309F9A855 /* ShoulderFlexionSagittalAssessment.swift */,
 				98BE6C60BC3535F0EEF561C2 /* SquatAnalyzer.swift */,
 				9E8CA3F88E5CF25D998A6DAA /* SquatAssessmentAnalyzer.swift */,
+				AB22B1E6E2ABF6BE6FF17663 /* SquatSagittalAssessment.swift */,
 			);
 			path = Analyzers;
 			sourceTree = "<group>";
@@ -287,6 +298,7 @@
 			isa = PBXGroup;
 			children = (
 				105AC656796E7FFED70AEAC7 /* AngleCalculatorTests.swift */,
+				DB6D0B37180A54813AF4D9AA /* AssessmentPlanesTests.swift */,
 				19A58E5F0BF0916EF41F84CD /* RepCounterTests.swift */,
 				5A609E5C32772A7E58BBA9E5 /* RepMetricsTests.swift */,
 				516414BA06A9A4FC972CA10B /* RowAnalyzerTests.swift */,
@@ -449,6 +461,7 @@
 				C65365314CC643DD871ADD8D /* ExerciseView.swift in Sources */,
 				B2B64A40ABB0A51B2E23E338 /* HipHingeAssessmentAnalyzer.swift in Sources */,
 				EF9ADF42F4451F935462240B /* HipHingeBackAnalyzer.swift in Sources */,
+				DD9A9F7D2D5C6D3F524A500F /* HipHingeFrontalAssessment.swift in Sources */,
 				1E0A283B2F36CF5182811FF0 /* HipHingeSideAnalyzer.swift in Sources */,
 				08FF4A46B616A7DC7068D318 /* KevLines2App.swift in Sources */,
 				AD8F372A84B695232C46E01E /* LandmarkSmoother.swift in Sources */,
@@ -468,9 +481,11 @@
 				EE6AED86C85E99910B2FEAB4 /* Shaders.metal in Sources */,
 				424BB36A5D8F39A12B4B4A2C /* ShoulderAnalyzer.swift in Sources */,
 				26C2EFA5D1413B03A1A6C699 /* ShoulderFlexionAssessment.swift in Sources */,
+				C43A8BB0F6B5D254BD9920C8 /* ShoulderFlexionSagittalAssessment.swift in Sources */,
 				CF0BC0BEEF9F82B643D1AEF5 /* SpineOverlay.swift in Sources */,
 				5D8F1169C478F4C319088C41 /* SquatAnalyzer.swift in Sources */,
 				AA30DF9BFC761EBE6AA3022E /* SquatAssessmentAnalyzer.swift in Sources */,
+				D0F69DFC29626975CAC74A58 /* SquatSagittalAssessment.swift in Sources */,
 				980672AFD0948CE929B55E0D /* TempoTracker.swift in Sources */,
 				B05300B5846CD89AAE55C9D5 /* VideoProcessor.swift in Sources */,
 				0F00F94AE5909EC5BD56C989 /* VideoReader.swift in Sources */,
@@ -484,6 +499,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7F47A83A070078FD96D016E2 /* AngleCalculatorTests.swift in Sources */,
+				D791C336A2991B5B2CC55FBA /* AssessmentPlanesTests.swift in Sources */,
 				8CABC4582C972316F63F0B28 /* RepCounterTests.swift in Sources */,
 				37A120D986F6E52B6AA3E08C /* RepMetricsTests.swift in Sources */,
 				F3B8F9720642118BBB8BE093 /* RowAnalyzerTests.swift in Sources */,
@@ -506,7 +522,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = KevLines;
 				INFOPLIST_KEY_NSCameraUsageDescription = "KevLines uses your camera for real-time exercise form analysis with skeleton overlay.";
@@ -518,7 +534,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 3.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kevinjones.KevLines2-0";
 				PRODUCT_MODULE_NAME = KevLines2_0;
 				PRODUCT_NAME = KevLines2.0;
@@ -688,7 +704,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = KevLines;
 				INFOPLIST_KEY_NSCameraUsageDescription = "KevLines uses your camera for real-time exercise form analysis with skeleton overlay.";
@@ -700,7 +716,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0.0;
+				MARKETING_VERSION = 3.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kevinjones.KevLines2-0";
 				PRODUCT_MODULE_NAME = KevLines2_0;
 				PRODUCT_NAME = KevLines2.0;

@@ -17,6 +17,12 @@ final class DeadliftAnalyzer: ExerciseAnalyzer {
     private let repCounter   = RepCounter(extendedThreshold: 160, flexedThreshold: 80)
     private let tempoTracker = TempoTracker()
 
+    /// See `SquatAnalyzer.minVertexVisibility` — same rationale, the hinge vertex (hip)
+    /// is the landmark most prone to occlusion by the bar, plates, or apparel.
+    private let minVertexVisibility: Float = 0.5
+    private var lastValidHipAngle: Float?
+    private var lastValidKneeAngle: Float?
+
     init(side: BodySide) {
         self.side = side
     }
@@ -42,21 +48,42 @@ final class DeadliftAnalyzer: ExerciseAnalyzer {
         let w_knee     = landmarks.worldPosition(for: .knee(side))    .map { smoother.smooth3D(key: "\(side)_knee",     position: $0, timestamp: ts) }
         let w_ankle    = landmarks.worldPosition(for: .ankle(side))   .map { smoother.smooth3D(key: "\(side)_ankle",    position: $0, timestamp: ts) }
 
-        let hipAngle: Float
+        let measuredHipAngle: Float
         if let ws = w_shoulder, let wh = w_hip, let wk = w_knee {
-            hipAngle = AngleCalculator.angle3D(a: ws, b: wh, c: wk)
+            measuredHipAngle = AngleCalculator.angle3D(a: ws, b: wh, c: wk)
         } else {
-            hipAngle = AngleCalculator.angle(a: shoulder, b: hip, c: knee)
+            measuredHipAngle = AngleCalculator.angle(a: shoulder, b: hip, c: knee)
         }
 
-        let kneeAngle: Float
+        let measuredKneeAngle: Float
         if let wh = w_hip, let wk = w_knee, let wa = w_ankle {
-            kneeAngle = AngleCalculator.angle3D(a: wh, b: wk, c: wa)
+            measuredKneeAngle = AngleCalculator.angle3D(a: wh, b: wk, c: wa)
         } else {
-            kneeAngle = AngleCalculator.angle(a: hip, b: knee, c: ankle)
+            measuredKneeAngle = AngleCalculator.angle(a: hip, b: knee, c: ankle)
         }
 
-        repCounter.update(angle: hipAngle, timestamp: ts)
+        let minVis = min(
+            landmarks.visibility(for: .shoulder(side)),
+            landmarks.visibility(for: .hip(side)),
+            landmarks.visibility(for: .knee(side)),
+            landmarks.visibility(for: .ankle(side))
+        )
+        let isConfident = minVis >= minVertexVisibility && measuredHipAngle.isFinite
+
+        if isConfident {
+            repCounter.update(angle: measuredHipAngle, timestamp: ts)
+            lastValidHipAngle  = measuredHipAngle
+            lastValidKneeAngle = measuredKneeAngle
+        }
+
+        let hipAngle  = isConfident ? measuredHipAngle  : (lastValidHipAngle  ?? measuredHipAngle)
+        let kneeAngle = isConfident ? measuredKneeAngle : (lastValidKneeAngle ?? measuredKneeAngle)
+
+        let emittedHipAngle:  Float = isConfident ? measuredHipAngle  : .nan
+        let emittedKneeAngle: Float = isConfident ? measuredKneeAngle : .nan
+        let tempoPhase: TempoPhase? = isConfident
+            ? tempoTracker.update(angle: measuredHipAngle, timestamp: ts)
+            : tempoTracker.currentPhase
 
         var instructions: [OverlayInstruction] = []
 
@@ -88,12 +115,12 @@ final class DeadliftAnalyzer: ExerciseAnalyzer {
 
         return FrameAnalysis(
             angles: [
-                JointAngle(joint: .hip,  degrees: hipAngle),
-                JointAngle(joint: .knee, degrees: kneeAngle)
+                JointAngle(joint: .hip,  degrees: emittedHipAngle),
+                JointAngle(joint: .knee, degrees: emittedKneeAngle)
             ],
             repCount: repCounter.count,
             repState: repCounter.state,
-            tempoPhase: tempoTracker.update(angle: hipAngle, timestamp: ts),
+            tempoPhase: tempoPhase,
             overlayInstructions: instructions
         )
     }
@@ -102,5 +129,7 @@ final class DeadliftAnalyzer: ExerciseAnalyzer {
         smoother.reset()
         repCounter.reset()
         tempoTracker.reset()
+        lastValidHipAngle = nil
+        lastValidKneeAngle = nil
     }
 }

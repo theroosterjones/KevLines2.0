@@ -18,8 +18,8 @@ final class HipHingeAssessmentAnalyzer: AssessmentAnalyzer {
     private var bestHipAngle: Float = 180    // lower = deeper hinge
     private var bestSpineDev: Float = 90     // lower = more neutral spine
 
-    private var depthHysteresis = HingeGradeHysteresis()
-    private var spineHysteresis = HingeGradeHysteresis()
+    private var depthHysteresis = GradeHysteresis()
+    private var spineHysteresis = GradeHysteresis()
 
     init(side: BodySide = .left) {
         self.side = side
@@ -159,31 +159,7 @@ final class HipHingeAssessmentAnalyzer: AssessmentAnalyzer {
         smoother.reset()
         bestHipAngle = 180
         bestSpineDev = 90
-        depthHysteresis = HingeGradeHysteresis()
-        spineHysteresis = HingeGradeHysteresis()
-    }
-}
-
-private struct HingeGradeHysteresis {
-    private var current: LetterGrade = .F
-    private var candidate: LetterGrade = .F
-    private var count = 0
-    private let threshold = 5
-
-    mutating func update(_ newGrade: LetterGrade) -> LetterGrade {
-        if newGrade == current {
-            count = 0
-            candidate = current
-        } else if newGrade == candidate {
-            count += 1
-            if count >= threshold {
-                current = newGrade
-                count = 0
-            }
-        } else {
-            candidate = newGrade
-            count = 1
-        }
-        return current
+        depthHysteresis = GradeHysteresis()
+        spineHysteresis = GradeHysteresis()
     }
 }

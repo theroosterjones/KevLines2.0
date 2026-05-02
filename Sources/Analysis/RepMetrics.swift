@@ -26,14 +26,25 @@ final class RepMetricsCollector {
 
     private(set) var completedReps: [RepMetric] = []
 
+    /// Largest instantaneous jump (in degrees) we'll accept as a real motion sample.
+    /// Larger jumps are treated as tracking noise (e.g. MediaPipe snapping the hip
+    /// landmark onto machine padding for a frame) and are excluded from peak-angle
+    /// tracking so a single bad frame can't poison the rep's ROM score.
+    private let maxAngleStepForPeakTracking: Float = 30.0
+
     private var lastRepCount = 0
     private var currentPeakAngle: Float = .greatestFiniteMagnitude
+    private var lastAcceptedAngle: Float?
     private var phaseAccumulators: [TempoPhase: Double] = [:]
     private var currentPhase: TempoPhase?
     private var phaseStartTime: Double?
     private var lastTimestamp: Double?
 
     /// Call once per frame with the current analysis output.
+    ///
+    /// Analyzers may pass `.nan` for `angle` when per-frame landmark confidence is too
+    /// low to trust the measurement; those frames are skipped for peak-angle tracking
+    /// while phase and rep bookkeeping continue normally.
     func update(phase: TempoPhase?, angle: Float, repCount: Int, timestamp: Double) {
         // Track phase durations
         if let phase, phase != currentPhase {
@@ -42,8 +53,19 @@ final class RepMetricsCollector {
             phaseStartTime = timestamp
         }
 
-        // Track peak flexion (minimum angle = deepest point)
-        currentPeakAngle = min(currentPeakAngle, angle)
+        // Track peak flexion (minimum angle = deepest point), gated against outliers
+        if angle.isFinite {
+            let accept: Bool
+            if let prev = lastAcceptedAngle {
+                accept = abs(angle - prev) <= maxAngleStepForPeakTracking
+            } else {
+                accept = true
+            }
+            if accept {
+                currentPeakAngle = min(currentPeakAngle, angle)
+                lastAcceptedAngle = angle
+            }
+        }
 
         // Rep just completed — finalize metrics
         if repCount > lastRepCount {
@@ -105,6 +127,7 @@ final class RepMetricsCollector {
         completedReps.removeAll()
         lastRepCount = 0
         currentPeakAngle = .greatestFiniteMagnitude
+        lastAcceptedAngle = nil
         phaseAccumulators = [:]
         currentPhase = nil
         phaseStartTime = nil

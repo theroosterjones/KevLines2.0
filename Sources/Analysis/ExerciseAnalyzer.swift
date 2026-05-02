@@ -79,6 +79,14 @@ enum OverlayColor {
             return (r, g, b, a)
         }
     }
+
+    /// Canonical colour for the spine polyline (ear → shoulder → mid-spine → hip).
+    /// Distinct from the limb skeleton (yellow/green), joint markers (red/orange),
+    /// and reference grids (white/cyan/magenta) so the spine is immediately
+    /// readable across every analyzer.
+    ///
+    /// Tweak the RGB here to retune every spine line in the app at once.
+    static let spine: OverlayColor = .custom(r: 0.65, g: 0.35, b: 1.0, a: 1.0)
 }
 
 // MARK: - Frame Analysis Result
@@ -155,33 +163,57 @@ protocol ExerciseAnalyzer: FrameAnalyzerProtocol {
 
 // MARK: - HUD Overlay Builder
 
-/// Generates Full HUD overlay instructions (rep counter, tempo, score) from RepMetricsCollector state.
-/// Called by the pipeline after the analyzer produces its base FrameAnalysis.
+/// Generates Full HUD overlay instructions (rep counter, current tempo, per-rep tempo
+/// history, and score) from `RepMetricsCollector` state. Called by the pipeline after
+/// the analyzer produces its base FrameAnalysis.
+///
+/// Everything is anchored to a right-side column so it can't collide with analyzer-
+/// specific HUD labels (most of which draw at x ≈ 0.02 on the left).
 enum HUDOverlayBuilder {
+
+    /// Left edge of the HUD column, in normalized frame coordinates.
+    private static let columnX: Float = 0.64
+    /// Vertical spacing between per-rep tempo list entries.
+    private static let listRowSpacing: Float = 0.032
+    /// Maximum number of completed reps to show in the tempo history list.
+    private static let maxHistoryRows: Int = 6
 
     static func instructions(repCount: Int, collector: RepMetricsCollector) -> [OverlayInstruction] {
         var hud: [OverlayInstruction] = []
 
-        // Large rep counter
+        // Large rep counter at the top of the column.
         hud.append(.text("Rep \(repCount)",
-            at: SIMD2(0.02, 0.04), color: .white, size: 28))
+            at: SIMD2(columnX, 0.03), color: .white, size: 28))
 
-        // Tempo counter
-        let tempoStr = collector.currentTempoString()
-        hud.append(.text(tempoStr,
-            at: SIMD2(0.02, 0.12), color: .cyan, size: 20))
-
-        // Score
+        // Score directly below, colored by threshold.
         if let score = collector.computeScore() {
             let scoreColor: OverlayColor
             if score >= 80 { scoreColor = .green }
             else if score >= 60 { scoreColor = .yellow }
             else { scoreColor = .red }
             hud.append(.text("Score: \(score)",
-                at: SIMD2(0.78, 0.04), color: scoreColor, size: 22))
+                at: SIMD2(columnX, 0.085), color: scoreColor, size: 20))
         } else {
             hud.append(.text("Score: --",
-                at: SIMD2(0.78, 0.04), color: .white, size: 22))
+                at: SIMD2(columnX, 0.085), color: .white, size: 20))
+        }
+
+        // In-progress tempo — present for every exercise whenever the tempo tracker
+        // has classified at least one phase. Labeled "Now" so it's obvious this is
+        // the live counter and the list below is the per-rep history.
+        hud.append(.text("Now: \(collector.currentTempoString())",
+            at: SIMD2(columnX, 0.13), color: .cyan, size: 16))
+
+        // Per-rep tempo history — newest at the top, older reps scrolling down.
+        let recent = Array(collector.completedReps.suffix(maxHistoryRows).reversed())
+        if !recent.isEmpty {
+            hud.append(.text("History",
+                at: SIMD2(columnX, 0.17), color: .white, size: 13))
+            for (i, rep) in recent.enumerated() {
+                let y = 0.205 + Float(i) * listRowSpacing
+                hud.append(.text("Rep \(rep.repNumber):  \(rep.tempoString)",
+                    at: SIMD2(columnX, y), color: .white, size: 14))
+            }
         }
 
         return hud

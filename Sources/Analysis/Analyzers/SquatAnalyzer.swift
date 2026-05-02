@@ -16,6 +16,16 @@ final class SquatAnalyzer: ExerciseAnalyzer {
     private let repCounter = RepCounter(extendedThreshold: 160, flexedThreshold: 100)
     private let tempoTracker = TempoTracker()
 
+    /// Minimum per-landmark visibility the hip/knee/ankle chain must meet for the
+    /// measured knee angle to be considered trustworthy.
+    ///
+    /// Pendulum squats, leg press machines, and other fixtures frequently occlude
+    /// the hip landmark, causing MediaPipe to snap it onto padding. Without this
+    /// gate those frames feed corrupt angles into the rep counter and the peak
+    /// angle collector, tanking the consistency score.
+    private let minVertexVisibility: Float = 0.5
+    private var lastValidKneeAngle: Float?
+
     init(side: BodySide) {
         self.side = side
     }
@@ -41,14 +51,37 @@ final class SquatAnalyzer: ExerciseAnalyzer {
         let w_knee  = landmarks.worldPosition(for: .knee(side)) .map { smoother.smooth3D(key: "\(side)_knee",  position: $0, timestamp: ts) }
         let w_ankle = landmarks.worldPosition(for: .ankle(side)).map { smoother.smooth3D(key: "\(side)_ankle", position: $0, timestamp: ts) }
 
-        let kneeAngle: Float
+        let measuredKneeAngle: Float
         if let wh = w_hip, let wk = w_knee, let wa = w_ankle {
-            kneeAngle = AngleCalculator.angle3D(a: wh, b: wk, c: wa)
+            measuredKneeAngle = AngleCalculator.angle3D(a: wh, b: wk, c: wa)
         } else {
-            kneeAngle = AngleCalculator.angle(a: hip, b: knee, c: ankle)
+            measuredKneeAngle = AngleCalculator.angle(a: hip, b: knee, c: ankle)
         }
 
-        repCounter.update(angle: kneeAngle, timestamp: ts)
+        let minVis = min(
+            landmarks.visibility(for: .hip(side)),
+            landmarks.visibility(for: .knee(side)),
+            landmarks.visibility(for: .ankle(side))
+        )
+        let isConfident = minVis >= minVertexVisibility && measuredKneeAngle.isFinite
+
+        // Only trustworthy measurements drive rep counting and tempo classification.
+        // Low-confidence frames are skipped entirely so one bad hip frame can't
+        // spuriously flip rep state or poison the velocity window.
+        if isConfident {
+            repCounter.update(angle: measuredKneeAngle, timestamp: ts)
+            lastValidKneeAngle = measuredKneeAngle
+        }
+
+        // Display path uses the last trusted angle to avoid flicker when tracking dips.
+        let kneeAngle = isConfident ? measuredKneeAngle : (lastValidKneeAngle ?? measuredKneeAngle)
+
+        // Emitted angle is NaN when not confident so RepMetricsCollector excludes the
+        // frame from peak-angle tracking (phase/rep bookkeeping still proceeds).
+        let emittedKneeAngle: Float = isConfident ? measuredKneeAngle : .nan
+        let tempoPhase: TempoPhase? = isConfident
+            ? tempoTracker.update(angle: measuredKneeAngle, timestamp: ts)
+            : tempoTracker.currentPhase
 
         var instructions: [OverlayInstruction] = []
 
@@ -82,10 +115,10 @@ final class SquatAnalyzer: ExerciseAnalyzer {
             at: SIMD2(0.02, 0.05), color: .white, size: 24))
 
         return FrameAnalysis(
-            angles: [JointAngle(joint: .knee, degrees: kneeAngle)],
+            angles: [JointAngle(joint: .knee, degrees: emittedKneeAngle)],
             repCount: repCounter.count,
             repState: repCounter.state,
-            tempoPhase: tempoTracker.update(angle: kneeAngle, timestamp: ts),
+            tempoPhase: tempoPhase,
             overlayInstructions: instructions
         )
     }
@@ -94,5 +127,6 @@ final class SquatAnalyzer: ExerciseAnalyzer {
         smoother.reset()
         repCounter.reset()
         tempoTracker.reset()
+        lastValidKneeAngle = nil
     }
 }

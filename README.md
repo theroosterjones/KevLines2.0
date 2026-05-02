@@ -1,33 +1,48 @@
-# KevLines 2.3 — On-Device Exercise Form Analysis
+# KevLines 3.2 — On-Device Exercise Form Analysis & Movement Assessment
 
-A fully local iOS app that analyzes exercise videos and overlays biomechanical feedback (joint angles, skeleton, rep counts, tempo phases) in real time using the device camera or saved videos. No server, no cloud, no network dependency.
+A fully local iOS app that analyzes exercise videos and movement screens, overlaying biomechanical feedback (joint angles, skeleton, rep counts, tempo phases, letter-graded postural assessments) in real time using the device camera or saved videos. No server, no cloud, no network dependency.
 
 ## Changelog
 
+### v3.2.0 — Plane-aware Movement Assessments
+- **Front/Back vs Side picker per assessment** — every movement assessment now ships in two camera-plane variants. The picker UI surfaces only the planes a given assessment supports, snaps the side picker on/off automatically (sagittal needs a side, frontal is bilateral), and rewrites both the camera-setup tip and low-tracking warning per plane.
+- **Sagittal Squat Assessment** — strict 90° side profile of the working leg. Grades depth (hip→knee→ankle), exposes peak knee flexion as a clinically familiar number, and grades torso lean against a band rather than purely lower-is-better. Captures lean *at* the bottom (not the worst lean across the clip) so descent/ascent transients don't bias the score.
+- **Frontal Hip Hinge Assessment** — bilateral rear-view hinge screen. Grades hip tilt, shoulder tilt, and worst-knee tracking deviation as a percentage of hip width. Sticky "high-side" labels (e.g. "L hip high 6.4°") so the summary names the asymmetric side, not just its magnitude.
+- **Sagittal Shoulder Flexion** — single-arm side-profile ROM analyzer with automatic side fallback when the user accidentally films the wrong profile (driven by mean per-landmark visibility with hysteresis to prevent flapping).
+- **3.2.2** — build version bump for App Store / TestFlight (`MARKETING_VERSION` 3.2.2, build 6).
+
+### v3.0.0 — Assessments, HUD modes, Spine landmarks
+- **Movement Assessments** — a new analysis category alongside Exercises. Implements `AssessmentAnalyzer` with letter-graded sub-metrics (A–F), a "weakest-link" overall grade, and a colored skeleton driven by per-frame grade with hysteresis to prevent flicker. Initial set: **Shoulder Flexion** (bilateral overhead ROM with asymmetry detection), **Squat Assessment** (rear-view depth + trunk lean + knee tracking), **Hip Hinge Assessment** (side-view depth + spine neutrality).
+- **Simple / Full HUD overlay modes** — toggleable via the gauge button in Live and the picker in Saved Video. `HUDOverlayBuilder` adds a right-anchored column with a large rep counter, current consistency score (0–100), live in-progress tempo, and the last six reps' tempo history.
+- **Per-rep metrics + consistency score** — `RepMetricsCollector` captures peak ROM angle and per-phase tempo durations for every completed rep, then derives a 0–100 score (60% ROM stddev, 40% tempo stddev). Outlier-gated against frames with a >30° single-step jump so one bad MediaPipe snap can't tank the score.
+- **Spine overlay** — derived ear → shoulder → mid-thoracic → hip polyline drawn behind every analyzer's joint markers. MediaPipe ships no explicit spine landmarks; `SpineOverlay` interpolates one and uses a single canonical color (`OverlayColor.spine`) so spine lines are immediately readable across every screen.
+- **Confidence-gated rep counting** — Squat / Deadlift / similar analyzers now gate rep counting, tempo classification, and peak-angle tracking behind a per-vertex visibility threshold (`minVertexVisibility = 0.5`). Low-confidence frames emit `.nan` for the angle so the metrics collector skips them, while overlay drawing falls back to the last trusted angle to avoid label flicker.
+- **Live tracking-quality warning** — non-blocking yellow banner appears when 20+ consecutive frames return no usable pose, with exercise/assessment-specific repositioning hints.
+
 ### v2.3.0 — Exercise Library Expansion
-- **Deadlift** (side view) — tracks hip angle (shoulder→hip→knee) as the primary rep driver with secondary knee angle; tempo tracking on the hip hinge
-- **Lunge** (side view) — tracks front knee angle with trunk lean shown in HUD to flag excessive forward lean
-- **Hip Hinge (Side)** — focused hinge pattern for RDL, good mornings, and KB deadlift drills; overlays a vertical plumb line through the hip as a hinge cue
-- **Hip Hinge (Back)** — bilateral assessment mode tracking hip tilt, shoulder tilt, and knee valgus/varus per side; no rep counting
-- **Overhead Press** (front or back view, bilateral) — tracks both elbow angles independently with average-driven rep counting; torso lean shown in HUD and highlighted red if >15°
+- **Deadlift** (side view) — tracks hip angle (shoulder→hip→knee) as the primary rep driver with secondary knee angle; tempo tracking on the hip hinge.
+- **Lunge** (side view) — tracks front knee angle with trunk lean shown in HUD to flag excessive forward lean.
+- **Hip Hinge (Side)** — focused hinge pattern for RDL, good mornings, and KB deadlift drills; overlays a vertical plumb line through the hip as a hinge cue.
+- **Hip Hinge (Back)** — bilateral assessment-style mode tracking hip tilt, shoulder tilt, and knee valgus/varus per side; no rep counting.
+- **Overhead Press** (front or back view, bilateral) — tracks both elbow angles independently with average-driven rep counting; torso lean shown in HUD and highlighted red if >15°.
 
 ### v2.2.0 — Camera Switching
-- **Front/back camera toggle** — tap the camera flip button in the live analysis top bar to switch between front and back camera at any time; mirroring is applied automatically for the front camera
+- **Front/back camera toggle** — tap the camera flip button in the live analysis top bar to switch between front and back camera at any time; mirroring is applied automatically for the front camera.
 
 ### v2.1.0 — Live Camera, 3D Angles, Adaptive Smoothing
-- **Live camera mode** — real-time skeleton overlay via Metal (`MTKView` + `CVMetalTextureCache`), SwiftUI Canvas on top for joint labels; record and export the annotated video without leaving the app
-- **Two new exercises** — Elbow (Bicep/Tricep) and Shoulder Assessment
-- **Shoulder Assessment** — posterior-plane bilateral analysis measuring left/right shoulder elevation from true 3D world coordinates; uses hip level as a baseline reference
-- **3D world landmark angles** — all joint angle measurements now use MediaPipe's metric world coordinates (metres, y-up, hip-centred origin) via `result.worldLandmarks`; 2D screen coordinates are still used for overlay drawing only
-- **1€ adaptive smoothing** — replaced fixed-alpha EMA with the one-euro filter; cutoff frequency adapts to signal speed so the skeleton is smooth at rest and responsive during reps without retuning per exercise
-- **Exercise consolidation** — removed Back Squat and Hack Squat; kept a single generic Squat analyzer
+- **Live camera mode** — real-time skeleton overlay via Metal (`MTKView` + `CVMetalTextureCache`), SwiftUI Canvas on top for joint labels; record and export the annotated video without leaving the app.
+- **Two new exercises** — Elbow (Bicep/Tricep) and Shoulder Assessment.
+- **Shoulder Assessment** — posterior-plane bilateral analysis measuring left/right shoulder elevation from true 3D world coordinates; uses hip level as a baseline reference.
+- **3D world landmark angles** — all joint angle measurements now use MediaPipe's metric world coordinates (metres, y-up, hip-centred origin) via `result.worldLandmarks`; 2D screen coordinates are still used for overlay drawing only.
+- **1€ adaptive smoothing** — replaced fixed-alpha EMA with the one-euro filter; cutoff frequency adapts to signal speed so the skeleton is smooth at rest and responsive during reps without retuning per exercise.
+- **Exercise consolidation** — removed Back Squat and Hack Squat; kept a single generic Squat analyzer.
 
 ### v2.0.0 — On-Device Foundation
-- Full port of the Python/Flask backend to a native iOS pipeline
-- Hardware-accelerated video I/O via `AVAssetReader` / `AVAssetWriter`
-- MediaPipe Pose Landmarker on-device (iOS SDK, GPU delegate)
-- Tempo phase classification (eccentric / pause / concentric / pause) via angular velocity
-- Saved video analysis with annotated video export
+- Full port of the Python/Flask backend to a native iOS pipeline.
+- Hardware-accelerated video I/O via `AVAssetReader` / `AVAssetWriter`.
+- MediaPipe Pose Landmarker on-device (iOS SDK, GPU delegate).
+- Tempo phase classification (eccentric / pause / concentric / pause) via angular velocity.
+- Saved video analysis with annotated video export.
 
 ---
 
@@ -45,7 +60,7 @@ KevLines 1.x ([repository](https://github.com/theroosterjones/KevLines)) used a 
 | Render free-tier cold starts | 30-60s delay before processing begins |
 | No real-time capability | Can't process live camera feed |
 
-**KevLines 2.0 eliminates all of these.** Everything runs on-device using Apple's hardware video pipeline and MediaPipe's iOS GPU delegate.
+**KevLines 2.0 eliminated all of these.** Everything runs on-device using Apple's hardware video pipeline and MediaPipe's iOS GPU delegate. The 3.x line builds on that foundation with assessments, HUD, and plane-aware analysis.
 
 ---
 
@@ -56,26 +71,27 @@ KevLines 1.x ([repository](https://github.com/theroosterjones/KevLines)) used a 
 ┌──────────────────────────────────────────────────────────────────────┐
 │                         SAVED VIDEO PIPELINE                          │
 │                                                                       │
-│  AVAssetReader ──► MediaPipe Pose ──► Analysis Engine ──► Overlay    │
-│  (HW decode)       Landmarker         • AngleCalculator   Renderer   │
-│                    (GPU)              • LandmarkSmoother  (CoreGFX)  │
-│                                       • RepCounter             │     │
-│                                       • TempoTracker            │    │
+│  AVAssetReader ──► MediaPipe Pose ──► Frame Analyzer ──► Overlay     │
+│  (HW decode)       Landmarker         • ExerciseAnalyzer  Renderer   │
+│                    (GPU)            ─ or AssessmentAnalyzer (CoreGFX)│
+│                                       • LandmarkSmoother (1€)       │
+│                                       • RepCounter / TempoTracker   │
+│                                       • RepMetricsCollector         │
+│                                       • GradeHysteresis (assessments)│
 │                                                                  ▼   │
 │                                                          AVAssetWriter│
 │                                                          (HW encode) │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-### Live Camera Mode (v2.1)
+### Live Camera Mode
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │                         LIVE CAMERA PIPELINE                          │
 │                                                                       │
-│  AVCaptureSession ──► MediaPipe Pose ──► Analysis Engine             │
-│  (BGRA, portrait)     Landmarker         • AngleCalculator           │
-│         │             (GPU)              • LandmarkSmoother (1€)     │
-│         │                                • RepCounter                │
+│  AVCaptureSession ──► MediaPipe Pose ──► Frame Analyzer              │
+│  (BGRA, portrait)     Landmarker         (Exercise or Assessment)    │
+│         │             (GPU)                                          │
 │         │                                                            │
 │         ├──► MetalCameraRenderer (MTKView) ◄─── Camera feed         │
 │         │    + SwiftUI Canvas overlay (OverlayInstructions)          │
@@ -85,32 +101,62 @@ KevLines 1.x ([repository](https://github.com/theroosterjones/KevLines)) used a 
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
+The same `OverlayInstruction` enum (`.line / .extendedLine / .circle / .text`) is consumed by both `OverlayRenderer` (Core Graphics, used for saved-video export and live recording) and `OverlayCanvas` (SwiftUI Canvas, used for live preview), so analyzers stay rendering-agnostic.
+
 ---
 
 ## Supported Exercises
 
-| Exercise | Tracked Joints | Rep Counting | Notes |
-|---|---|---|---|
-| Squat | Knee, Hip | Knee angle (100°/160°) | Side view |
-| Barbell Row | Elbow, Shoulder | Elbow angle (100°/150°) | Side view |
-| Lat Pulldown | Elbow, Shoulder | Elbow angle (90°/150°) | Side view |
-| Elbow (Bicep/Tricep) | Elbow | Elbow angle (60°/155°) | Side view; covers curl, extension |
-| Shoulder Assessment | Shoulder girdle tilt | None (postural) | Posterior view; left/right elevation comparison |
+Rep-counted analyzers driven by an angle-threshold state machine + tempo classification. All angle measurements use 3D world coordinates with a 2D fallback.
 
-All angle measurements use **3D world coordinates** (camera-position-independent) with 2D screen coordinates as a fallback.
+| Exercise | View | Tracked Joints | Rep Driver | Notes |
+|---|---|---|---|---|
+| Squat | Side | Knee, Hip, Spine | Knee 100°/160° | Confidence-gated rep counting (vertex visibility ≥ 0.5) |
+| Deadlift | Side | Hip, Knee, Spine | Hip 80°/160° | Same gating; secondary knee-angle readout |
+| Lunge | Side | Front knee, Hip | Knee 100°/155° | Trunk-lean readout in HUD |
+| Hip Hinge (Side) | Side | Hip, Knee | Hip 65°/155° | Vertical plumb line through hip as hinge cue |
+| Hip Hinge (Back) | Rear | Hips, Shoulders, Knees | None (postural) | Bilateral tilt + valgus/varus screen |
+| Barbell Row | Side | Elbow, Shoulder | Elbow 100°/150° | |
+| Lat Pulldown | Side | Elbow, Shoulder | Elbow 90°/150° | |
+| Overhead Press | Front/Back | Both elbows (bilateral) | Avg elbow | Torso lean flagged red if >15° |
+| Elbow (Bicep/Tricep) | Side | Elbow | Elbow 60°/155° | Covers curl + extension |
+| Shoulder Assessment | Front/Back | Shoulder girdle tilt | None (postural) | L/R shoulder elevation comparison |
 
 ---
 
-## New in 2.1: Technical Details
+## Movement Assessments
+
+Letter-graded postural / movement screens with no rep counting. Each surfaces an overall grade plus per-metric sub-grades using a "weakest-link" model (overall grade = worst sub-grade). Each assessment ships in two camera-plane variants; the picker auto-hides the side selector for frontal-plane (bilateral) variants.
+
+| Assessment | Frontal (Front/Back) | Sagittal (Side) |
+|---|---|---|
+| Shoulder Flexion | Bilateral overhead ROM, L/R asymmetry flag (>15° diff) | Single-arm ROM with auto side-fallback when the wrong profile is filmed |
+| Squat Assessment | Depth (avg knee), Trunk Lean, Knee Tracking (% of hip width) | Depth + Knee Flexion + Torso Lean (graded vs. an expected band) |
+| Hip Hinge Assessment | Hip Level, Shoulder Level, Knee Tracking (sticky high-side label) | Hinge Depth + Spine Neutrality (mid-spine deviation from ear-hip line) |
+
+Coloring uses `OverlayColor.romQuality(grade:)` (green→red across A–F) and runs through `GradeHysteresis` (5-frame default) so the colored skeleton doesn't flicker between adjacent grades during live preview.
+
+---
+
+## Technical Details
 
 ### Live Camera (Metal)
 `CameraService` wraps `AVCaptureSession` with `kCVPixelFormatType_32BGRA` output, a 90° rotation for portrait orientation, and front-camera mirroring. `MetalCameraRenderer` converts each `CVPixelBuffer` to an `MTLTexture` via `CVMetalTextureCache` (zero-copy) and renders it as a textured full-screen quad. A `SwiftUI.Canvas` overlay draws the skeleton instructions in normalized coordinates on top. When recording, `OverlayRenderer` composites the overlay onto a cloned pixel buffer and writes it via `LiveVideoRecorder` (`AVAssetWriter`, `expectsMediaDataInRealTime = true`).
 
 ### 3D World Landmark Angles
-`PoseLandmarkerService` now extracts both `result.landmarks` (normalised 2D, for overlay drawing) and `result.worldLandmarks` (metric 3D, for angle calculations). `AngleCalculator.angle3D(a:b:c:)` computes the interior angle using `simd_normalize` + `simd_dot` + `acos` with a `[-1, 1]` clamp. Each analyzer tries world positions first and falls back to 2D screen positions if unavailable. `LandmarkSmoother` has independent `smooth()` (2D) and `smooth3D()` channels so overlay and angle smoothing don't interfere.
+`PoseLandmarkerService` extracts both `result.landmarks` (normalised 2D, for overlay drawing) and `result.worldLandmarks` (metric 3D, for angle calculations). `AngleCalculator.angle3D(a:b:c:)` computes the interior angle using `simd_normalize` + `simd_dot` + `acos` with a `[-1, 1]` clamp. Each analyzer tries world positions first and falls back to 2D screen positions if unavailable. `LandmarkSmoother` has independent `smooth()` (2D) and `smooth3D()` channels so overlay and angle smoothing don't interfere.
 
 ### 1€ Adaptive Filter
-`LandmarkSmoother` is now a 1€ filter. At rest the cutoff is `minCutoff = 1.0 Hz` (smooth). During movement the cutoff rises proportionally to `beta × |smoothed_speed|` (`beta = 0.5`), keeping the skeleton responsive during reps without jitter at lockout. The `timestamp` parameter accepts `landmarks.timestamp` (actual frame time) so the filter uses correct `dt` in both live and offline modes — without this, offline video processed faster than real time would give a near-zero alpha and freeze the filter.
+`LandmarkSmoother` is a 1€ filter. At rest the cutoff is `minCutoff = 1.0 Hz` (smooth). During movement the cutoff rises proportionally to `beta × |smoothed_speed|` (`beta = 0.5`), keeping the skeleton responsive during reps without jitter at lockout. The `timestamp` parameter accepts `landmarks.timestamp` (actual frame time) so the filter uses correct `dt` in both live and offline modes — without this, offline video processed faster than real time would give a near-zero alpha and freeze the filter.
+
+### Plane-aware Assessment Routing
+`AssessmentConfig.makeAnalyzer(side:plane:)` switches over a `(AssessmentType, ViewPlane)` tuple to instantiate the correct analyzer. Each assessment declares its `supportedPlanes` and `defaultPlane`; the picker UI in both `ExerciseView` and `LiveAnalysisView` only shows the segmented plane control when `supportedPlanes.count > 1`, snaps the plane back to the default on assessment change, and toggles the side selector on/off based on `requiresSideSelection(plane:)`. Camera-setup tips and low-tracking warnings are also plane-aware.
+
+### Per-rep Metrics + Consistency Score
+`RepMetricsCollector` consumes `(phase, angle, repCount, timestamp)` once per frame. When `repCount` increments, it finalizes the rep with peak flexion angle (gated against >30° single-step jumps so one bad frame can't poison ROM stats) and per-phase durations, then resets. The 0–100 score weighs ROM stddev (60%) and tempo stddev (40%) and is only emitted after at least 3 completed reps. `HUDOverlayBuilder` renders the score, the live in-progress tempo, and the last six completed reps as a scrolling history.
+
+### Spine Polyline
+MediaPipe doesn't ship spine landmarks. `SpineOverlay.instructions(ear:shoulder:hip:)` derives a four-point polyline (ear → shoulder → midpoint → hip), uses a single canonical color (`OverlayColor.spine`), and is drawn first by every analyzer so the limb skeleton and joint markers paint over it. Sagittal-plane assessments tint the spine with the lean / neutrality grade so spine quality is immediately legible.
 
 ---
 
@@ -127,10 +173,10 @@ KevLines2.0/
 │   │   │   └── CameraService.swift         # AVCaptureSession, BGRA output, portrait rotation
 │   │   ├── Math/
 │   │   │   ├── AngleCalculator.swift        # angle() 2D, angle3D() metric, extendLineToFrame()
-│   │   │   └── LandmarkSmoother.swift       # 1€ adaptive filter (replaced EMA)
+│   │   │   └── LandmarkSmoother.swift       # 1€ adaptive filter (2D + 3D channels)
 │   │   ├── Metal/
 │   │   │   ├── MetalCameraRenderer.swift    # MTKViewDelegate, CVMetalTextureCache, draw loop
-│   │   │   └── Shaders.metal               # cameraVertex / cameraFragment (BGRA full-screen quad)
+│   │   │   └── Shaders.metal                # cameraVertex / cameraFragment (BGRA full-screen quad)
 │   │   ├── Pose/
 │   │   │   ├── PoseLandmarkerService.swift  # MediaPipe wrapper; extracts 2D + 3D landmarks
 │   │   │   └── LandmarkTypes.swift          # PoseLandmarkType, NormalizedLandmark, PoseResult
@@ -140,31 +186,48 @@ KevLines2.0/
 │   │       ├── VideoProcessor.swift         # Offline pipeline orchestrator
 │   │       └── LiveVideoRecorder.swift      # Real-time AVAssetWriter
 │   ├── Analysis/
-│   │   ├── ExerciseAnalyzer.swift           # Protocol + ExerciseType + shared value types
+│   │   ├── ExerciseAnalyzer.swift           # Protocol + ExerciseType + FrameAnalysis + HUDOverlayBuilder
+│   │   ├── AssessmentAnalyzer.swift         # Protocol + AssessmentType + ViewPlane + LetterGrade + GradeHysteresis
 │   │   ├── RepCounter.swift
 │   │   ├── TempoTracker.swift
-│   │   ├── AnalysisResult.swift
+│   │   ├── RepMetrics.swift                 # RepMetric + RepMetricsCollector + score
+│   │   ├── SpineOverlay.swift               # Derived ear→shoulder→mid→hip polyline
+│   │   ├── AnalysisResult.swift             # Persistable WorkoutResult
 │   │   └── Analyzers/
 │   │       ├── SquatAnalyzer.swift
+│   │       ├── DeadliftAnalyzer.swift
+│   │       ├── LungeAnalyzer.swift
+│   │       ├── HipHingeSideAnalyzer.swift
+│   │       ├── HipHingeBackAnalyzer.swift
 │   │       ├── RowAnalyzer.swift
 │   │       ├── LatPulldownAnalyzer.swift
-│   │       ├── ElbowAnalyzer.swift          # New in 2.1
-│   │       └── ShoulderAnalyzer.swift       # New in 2.1
+│   │       ├── OverheadPressAnalyzer.swift
+│   │       ├── ElbowAnalyzer.swift
+│   │       ├── ShoulderAnalyzer.swift
+│   │       ├── ShoulderFlexionAssessment.swift          # Frontal (bilateral)
+│   │       ├── ShoulderFlexionSagittalAssessment.swift  # Sagittal (single-arm + side fallback)
+│   │       ├── SquatAssessmentAnalyzer.swift            # Frontal
+│   │       ├── SquatSagittalAssessment.swift            # Sagittal
+│   │       ├── HipHingeFrontalAssessment.swift          # Frontal
+│   │       └── HipHingeAssessmentAnalyzer.swift         # Sagittal
 │   ├── Overlay/
-│   │   └── OverlayRenderer.swift
+│   │   └── OverlayRenderer.swift            # Core Graphics renderer (saved video + live recording)
 │   ├── Views/
-│   │   ├── ExerciseView.swift               # Saved Video / Live Camera mode picker
-│   │   ├── LiveAnalysisView.swift           # New in 2.1 — full-screen camera + overlay UI
+│   │   ├── ExerciseView.swift               # Saved Video / Live Camera mode picker, assessments + plane picker
+│   │   ├── LiveAnalysisView.swift           # Full-screen camera + Metal preview + SwiftUI overlay
 │   │   ├── WorkoutHistoryView.swift
 │   │   └── SettingsView.swift
 │   ├── Models/
-│   │   ├── Exercise.swift
+│   │   ├── Exercise.swift                   # ExerciseConfig + AssessmentConfig (plane routing) + camera tips
 │   │   └── AnalysisConfig.swift
 │   └── pose_landmarker_full.task
 ├── Tests/
 │   ├── AngleCalculatorTests.swift
-│   └── RepCounterTests.swift
-├── project.yml                              # XcodeGen spec
+│   ├── RepCounterTests.swift
+│   ├── RepMetricsTests.swift
+│   ├── RowAnalyzerTests.swift
+│   └── AssessmentPlanesTests.swift          # Plane routing + sagittal/frontal analyzer behavior
+├── project.yml                              # XcodeGen spec (incl. MediaPipe plist patch scripts)
 └── README.md
 ```
 
@@ -196,7 +259,7 @@ xcodegen generate
 open KevLines2.0.xcodeproj
 ```
 
-The SPM dependency ([SwiftTasksVision](https://github.com/paescebu/SwiftTasksVision)) and model bundling are already configured in `project.yml`. Build, select your iPhone as the target, and run.
+The SPM dependency ([SwiftTasksVision](https://github.com/paescebu/SwiftTasksVision)) and model bundling are already configured in `project.yml`, including pre/post-build scripts that patch MediaPipe's framework `Info.plist` for App Store validation. Build, select your iPhone as the target, and run.
 
 > **First launch:** the app will request camera access when you switch to Live Camera mode. Grant it in the system prompt or via Settings → Privacy → Camera.
 
@@ -215,32 +278,43 @@ The SPM dependency ([SwiftTasksVision](https://github.com/paescebu/SwiftTasksVis
 | Video encode | AVAssetWriter / VideoToolbox | H.264, single pass |
 | Angle math | simd (Accelerate) | `angle()` 2D screen, `angle3D()` metric world |
 | Smoothing | 1€ filter | Adaptive cutoff: smooth at rest, responsive during reps |
+| Grading | Custom (`LetterGrade` + `GradeHysteresis`) | A–F with frame-count hysteresis to prevent color flicker |
 | UI | SwiftUI | iOS 17+ |
 
 ---
 
 ## Performance
 
-| Stage | KevLines 1.x | KevLines 2.0 | KevLines 2.1 |
-|---|---|---|---|
-| Video decode | cv2 CPU software | AVAssetReader HW | AVAssetReader HW |
-| Pose estimation | MediaPipe CPU (server) | MediaPipe GPU (device) | MediaPipe GPU (device) |
-| Overlay rendering | OpenCV CPU | Core Graphics | Metal (live) / Core Graphics (saved) |
-| Video encode | cv2 + ffmpeg re-encode | AVAssetWriter HW | AVAssetWriter HW |
-| Network transfer | Upload + download | None | None |
-| Angle accuracy | 2D projected (camera-dependent) | 2D projected | 3D world metric |
-| **30s video total** | **2-5 minutes** | **5-15 seconds** | **5-15 seconds** |
-| **Live camera** | **Not supported** | **Not supported** | **Real-time** |
+| Stage | KevLines 1.x | KevLines 2.0+ |
+|---|---|---|
+| Video decode | cv2 CPU software | AVAssetReader HW |
+| Pose estimation | MediaPipe CPU (server) | MediaPipe GPU (device) |
+| Overlay rendering | OpenCV CPU | Metal (live) / Core Graphics (saved) |
+| Video encode | cv2 + ffmpeg re-encode | AVAssetWriter HW |
+| Network transfer | Upload + download | None |
+| Angle accuracy | 2D projected (camera-dependent) | 3D world metric |
+| **30s video total** | **2-5 minutes** | **5-15 seconds** |
+| **Live camera** | **Not supported** | **Real-time** |
 
 ---
 
 ## Adding a New Exercise
 
-1. Create `Sources/Analysis/Analyzers/NewExerciseAnalyzer.swift` conforming to `ExerciseAnalyzer`
-2. Guard on 2D positions (needed for overlay), then fetch 3D world positions for angle calculation
-3. Use `AngleCalculator.angle3D()` with a `AngleCalculator.angle()` fallback
-4. Pass `timestamp: landmarks.timestamp` to every `smoother.smooth()` call
-5. Add the case to `ExerciseType` and `ExerciseConfig.all` in `Exercise.swift`
+1. Create `Sources/Analysis/Analyzers/NewExerciseAnalyzer.swift` conforming to `ExerciseAnalyzer`.
+2. Guard on 2D positions (needed for overlay), then fetch 3D world positions for angle calculation.
+3. Use `AngleCalculator.angle3D()` with an `AngleCalculator.angle()` fallback.
+4. Pass `timestamp: landmarks.timestamp` to every `smoother.smooth()` / `smoother.smooth3D()` call.
+5. (Recommended) Apply confidence gating à la `SquatAnalyzer` — skip rep counting / tempo / peak tracking when `min(visibility...) < 0.5` and emit `.nan` for the angle so `RepMetricsCollector` excludes the frame.
+6. Add the case to `ExerciseType`, then add an entry to `ExerciseConfig.all` in `Models/Exercise.swift` (+ camera tip + tracking warning copy).
+
+## Adding a New Assessment
+
+1. Create one analyzer per supported plane (`AssessmentAnalyzer`), e.g. `MyAssessment.swift` (frontal) and `MyAssessmentSagittal.swift` (sagittal).
+2. Implement `currentMetrics()` returning sub-grades + an overall grade (use `LetterGrade.gradeLowerIsBetter` / `gradeHigherIsBetter`).
+3. Wrap per-frame grading in `GradeHysteresis` so the colored skeleton stays stable.
+4. Add the case to `AssessmentType`, then add an entry to `AssessmentConfig.all` declaring `supportedPlanes` + `defaultPlane`.
+5. Wire the case into `AssessmentConfig.makeAnalyzer(side:plane:)`.
+6. Add plane-aware copy to `AssessmentType.cameraSetupTip(for:)` and `lowTrackingWarning(for:)`.
 
 No server changes, no API updates, no deployment.
 
@@ -253,12 +327,16 @@ No server changes, no API updates, no deployment.
 - [x] Live camera analysis (real-time overlay via Metal)
 - [x] 3D angle calculations using MediaPipe world landmarks
 - [x] Advanced smoothing filters (1€ one-euro filter)
-- [ ] **Exercise library expansion** — deadlift, bench press, overhead press, lunge, hip hinge
-- [ ] **Movement assessments** — overhead squat screen, single-leg balance, thoracic rotation
-- [ ] Form scoring algorithm (per-rep quality score)
+- [x] Exercise library expansion — deadlift, lunge, hip hinge, overhead press
+- [x] Movement assessments — shoulder flexion, squat, hip hinge
+- [x] Plane-aware assessments — frontal vs sagittal variants per assessment type
+- [x] Per-rep metrics + form-quality consistency score (0–100)
+- [ ] Wire live assessment grade into the Live mode bottom bar (currently shows "—")
 - [ ] Apple Watch companion (rep counting via CoreMotion)
-- [ ] SwiftData persistence for workout history *(later)*
-- [ ] Video export with audio track preservation *(later/optional)*
+- [ ] SwiftData persistence for workout + assessment history
+- [ ] Trends view — score / grade progression over time
+- [ ] Video export with audio track preservation
+- [ ] Single-leg balance, thoracic rotation, overhead squat screens
 
 ---
 

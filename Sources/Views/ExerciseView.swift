@@ -34,6 +34,9 @@ struct ExerciseView: View {
     @State private var analysisCategory: AnalysisCategory = .exercise
     @State private var selectedExerciseType: ExerciseType = .squat
     @State private var selectedAssessmentType: AssessmentType = .shoulderFlexion
+    @State private var selectedAssessmentPlane: ViewPlane = AssessmentConfig.all.first(
+        where: { $0.type == .shoulderFlexion }
+    )?.defaultPlane ?? .frontal
     @State private var selectedSide: BodySide = .left
     @State private var overlayMode: OverlayMode = .simple
     @State private var selectedVideoItem: PhotosPickerItem?
@@ -57,11 +60,17 @@ struct ExerciseView: View {
     }
 
     private var currentRequiresSideSelection: Bool {
-        analysisCategory == .exercise ? selectedExercise.requiresSideSelection : selectedAssessment.requiresSideSelection
+        if analysisCategory == .exercise {
+            return selectedExercise.requiresSideSelection
+        }
+        return selectedAssessment.requiresSideSelection(plane: selectedAssessmentPlane)
     }
 
     private var currentCameraSetupTip: String {
-        analysisCategory == .exercise ? selectedExerciseType.cameraSetupTip : selectedAssessmentType.cameraSetupTip
+        if analysisCategory == .exercise {
+            return selectedExerciseType.cameraSetupTip
+        }
+        return selectedAssessmentType.cameraSetupTip(for: selectedAssessmentPlane)
     }
 
     var body: some View {
@@ -73,6 +82,9 @@ struct ExerciseView: View {
                     if analysisMode == .savedVideo {
                         categoryPicker
                         exerciseOrAssessmentPicker
+                        if analysisCategory == .assessment {
+                            assessmentPlanePicker
+                        }
                         cameraSetupTipCard
                         sidePicker
                         if analysisCategory == .exercise {
@@ -90,7 +102,7 @@ struct ExerciseView: View {
                 }
                 .padding(.bottom, 40)
             }
-            .navigationTitle("KevLines 3.0")
+            .navigationTitle("KevLines 3.2.2")
             .alert("Error", isPresented: $showingError) {
                 Button("OK") { }
             } message: {
@@ -160,6 +172,30 @@ struct ExerciseView: View {
                 }
             }
             .pickerStyle(.menu)
+            .padding(.horizontal)
+            .onChange(of: selectedAssessmentType) { _, newType in
+                // When the assessment changes, snap the plane back to that
+                // assessment's default rather than carrying over the previous
+                // selection (which may not be supported).
+                if let cfg = AssessmentConfig.all.first(where: { $0.type == newType }) {
+                    if !cfg.supportedPlanes.contains(selectedAssessmentPlane) {
+                        selectedAssessmentPlane = cfg.defaultPlane
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var assessmentPlanePicker: some View {
+        let supported = selectedAssessment.supportedPlanes
+        if supported.count > 1 {
+            Picker("Plane", selection: $selectedAssessmentPlane) {
+                ForEach(supported) { plane in
+                    Text(plane.displayName).tag(plane)
+                }
+            }
+            .pickerStyle(.segmented)
             .padding(.horizontal)
         }
     }
@@ -466,7 +502,7 @@ struct ExerciseView: View {
         let assessmentAnalyzerRef: AssessmentAnalyzer?
 
         if analysisCategory == .assessment {
-            let aa = selectedAssessment.makeAnalyzer(side: selectedSide)
+            let aa = selectedAssessment.makeAnalyzer(side: selectedSide, plane: selectedAssessmentPlane)
             analyzer = aa
             assessmentAnalyzerRef = aa
         } else {

@@ -289,6 +289,9 @@ struct LiveAnalysisView: View {
     @State private var analysisCategory: AnalysisCategory = .exercise
     @State private var selectedExerciseType: ExerciseType = .squat
     @State private var selectedAssessmentType: AssessmentType = .shoulderFlexion
+    @State private var selectedAssessmentPlane: ViewPlane = AssessmentConfig.all.first(
+        where: { $0.type == .shoulderFlexion }
+    )?.defaultPlane ?? .frontal
     @State private var selectedSide: BodySide = .left
     @State private var showPermissionAlert = false
     @State private var savedVideoURL: URL?
@@ -305,15 +308,24 @@ struct LiveAnalysisView: View {
     private var isAssessmentMode: Bool { analysisCategory == .assessment }
 
     private var currentRequiresSideSelection: Bool {
-        isAssessmentMode ? selectedAssessment.requiresSideSelection : selectedExercise.requiresSideSelection
+        if isAssessmentMode {
+            return selectedAssessment.requiresSideSelection(plane: selectedAssessmentPlane)
+        }
+        return selectedExercise.requiresSideSelection
     }
 
     private var currentCameraSetupTip: String {
-        isAssessmentMode ? selectedAssessmentType.cameraSetupTip : selectedExerciseType.cameraSetupTip
+        if isAssessmentMode {
+            return selectedAssessmentType.cameraSetupTip(for: selectedAssessmentPlane)
+        }
+        return selectedExerciseType.cameraSetupTip
     }
 
     private var currentTrackingWarning: String {
-        isAssessmentMode ? selectedAssessmentType.lowTrackingWarning : selectedExerciseType.lowTrackingWarning
+        if isAssessmentMode {
+            return selectedAssessmentType.lowTrackingWarning(for: selectedAssessmentPlane)
+        }
+        return selectedExerciseType.lowTrackingWarning
     }
 
     var body: some View {
@@ -351,7 +363,16 @@ struct LiveAnalysisView: View {
             if let url = savedVideoURL { ShareSheet(items: [url]) }
         }
         .onChange(of: selectedExerciseType)    { _, _ in reconfigure() }
-        .onChange(of: selectedAssessmentType)  { _, _ in reconfigure() }
+        .onChange(of: selectedAssessmentType)  { _, newType in
+            // Snap plane to the new assessment's default if the previous plane
+            // isn't supported. Always reconfigure afterwards.
+            if let cfg = AssessmentConfig.all.first(where: { $0.type == newType }),
+               !cfg.supportedPlanes.contains(selectedAssessmentPlane) {
+                selectedAssessmentPlane = cfg.defaultPlane
+            }
+            reconfigure()
+        }
+        .onChange(of: selectedAssessmentPlane) { _, _ in reconfigure() }
         .onChange(of: selectedSide)            { _, _ in reconfigure() }
         .onChange(of: analysisCategory)        { _, _ in reconfigure() }
     }
@@ -377,6 +398,16 @@ struct LiveAnalysisView: View {
                     .pickerStyle(.menu)
                     .tint(.white)
                     .frame(maxWidth: .infinity, alignment: .leading)
+
+                    let supportedPlanes = selectedAssessment.supportedPlanes
+                    if supportedPlanes.count > 1 {
+                        Picker("Plane", selection: $selectedAssessmentPlane) {
+                            ForEach(supportedPlanes) { plane in
+                                Text(plane.displayName).tag(plane)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
                 } else {
                     Picker("Exercise", selection: $selectedExerciseType) {
                         ForEach(ExerciseType.allCases) { type in
@@ -552,7 +583,10 @@ struct LiveAnalysisView: View {
     private func reconfigure() {
         let analyzer: FrameAnalyzerProtocol
         if isAssessmentMode {
-            analyzer = selectedAssessment.makeAnalyzer(side: selectedSide)
+            analyzer = selectedAssessment.makeAnalyzer(
+                side: selectedSide,
+                plane: selectedAssessmentPlane
+            )
         } else {
             analyzer = selectedExercise.makeAnalyzer(side: selectedSide)
         }

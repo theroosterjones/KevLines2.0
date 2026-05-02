@@ -33,6 +33,15 @@ final class ElbowAnalyzer: ExerciseAnalyzer {
         let elbow    = smoother.smooth(key: "\(side)_elbow",    position: rawElbow,    timestamp: ts)
         let wrist    = smoother.smooth(key: "\(side)_wrist",    position: rawWrist,    timestamp: ts)
 
+        // Hip and ear are optional — bicep curls / tricep work are often filmed
+        // tight enough to crop the lower body. If the hip lands inside the
+        // frame we draw the spine overlay for postural context; otherwise the
+        // overlay degrades gracefully to just the working arm.
+        let hip = landmarks.position(for: .hip(side))
+            .map { smoother.smooth(key: "\(side)_hip", position: $0, timestamp: ts) }
+        let ear = landmarks.position(for: .ear(side))
+            .map { smoother.smooth(key: "\(side)_ear", position: $0, timestamp: ts) }
+
         let w_shoulder = landmarks.worldPosition(for: .shoulder(side)).map { smoother.smooth3D(key: "\(side)_shoulder", position: $0, timestamp: ts) }
         let w_elbow    = landmarks.worldPosition(for: .elbow(side))   .map { smoother.smooth3D(key: "\(side)_elbow",    position: $0, timestamp: ts) }
         let w_wrist    = landmarks.worldPosition(for: .wrist(side))   .map { smoother.smooth3D(key: "\(side)_wrist",    position: $0, timestamp: ts) }
@@ -49,6 +58,13 @@ final class ElbowAnalyzer: ExerciseAnalyzer {
         let phase = tempoTracker.update(angle: elbowAngle, time: frameTime)
 
         var instructions: [OverlayInstruction] = []
+
+        // Spine overlay (drawn first when the hip is in frame so the arm
+        // skeleton sits on top of it).
+        if let hip {
+            instructions.append(contentsOf: SpineOverlay.instructions(
+                ear: ear, shoulder: shoulder, hip: hip))
+        }
 
         // Forearm extension reference line (background reference)
         instructions.append(.extendedLine(from: elbow, through: wrist, color: .cyan, width: 2))

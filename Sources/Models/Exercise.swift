@@ -59,24 +59,51 @@ enum AnalysisCategory: String, CaseIterable {
 struct AssessmentConfig {
     let type: AssessmentType
     let displayName: String
-    let requiresSideSelection: Bool
+    /// Planes (front/back vs side) supported by this assessment, in display order.
+    let supportedPlanes: [ViewPlane]
+    /// The plane chosen by default when the user first selects this assessment.
+    let defaultPlane: ViewPlane
     let defaultSide: BodySide
 
-    func makeAnalyzer(side: BodySide) -> AssessmentAnalyzer {
-        switch type {
-        case .shoulderFlexion:    return ShoulderFlexionAssessment()
-        case .squatAssessment:    return SquatAssessmentAnalyzer()
-        case .hipHingeAssessment: return HipHingeAssessmentAnalyzer(side: side)
+    /// Sagittal-plane variants always need a side; frontal-plane bilateral variants
+    /// look at both sides simultaneously and don't.
+    func requiresSideSelection(plane: ViewPlane) -> Bool {
+        plane == .sagittal
+    }
+
+    func makeAnalyzer(side: BodySide, plane: ViewPlane) -> AssessmentAnalyzer {
+        switch (type, plane) {
+        case (.shoulderFlexion, .frontal):
+            return ShoulderFlexionAssessment()
+        case (.shoulderFlexion, .sagittal):
+            return ShoulderFlexionSagittalAssessment(side: side)
+        case (.squatAssessment, .frontal):
+            return SquatAssessmentAnalyzer()
+        case (.squatAssessment, .sagittal):
+            return SquatSagittalAssessment(side: side)
+        case (.hipHingeAssessment, .frontal):
+            return HipHingeFrontalAssessment()
+        case (.hipHingeAssessment, .sagittal):
+            return HipHingeAssessmentAnalyzer(side: side)
         }
     }
 
     static let all: [AssessmentConfig] = [
-        AssessmentConfig(type: .shoulderFlexion,    displayName: "Shoulder Flexion",
-                         requiresSideSelection: false, defaultSide: .left),
-        AssessmentConfig(type: .squatAssessment,    displayName: "Squat Assessment",
-                         requiresSideSelection: false, defaultSide: .left),
-        AssessmentConfig(type: .hipHingeAssessment, displayName: "Hip Hinge Assessment",
-                         requiresSideSelection: true,  defaultSide: .left),
+        AssessmentConfig(
+            type: .shoulderFlexion, displayName: "Shoulder Flexion",
+            supportedPlanes: [.frontal, .sagittal], defaultPlane: .frontal,
+            defaultSide: .left
+        ),
+        AssessmentConfig(
+            type: .squatAssessment, displayName: "Squat Assessment",
+            supportedPlanes: [.frontal, .sagittal], defaultPlane: .frontal,
+            defaultSide: .left
+        ),
+        AssessmentConfig(
+            type: .hipHingeAssessment, displayName: "Hip Hinge Assessment",
+            supportedPlanes: [.frontal, .sagittal], defaultPlane: .sagittal,
+            defaultSide: .left
+        ),
     ]
 }
 
