@@ -118,20 +118,20 @@ final class SquatSagittalAssessment: AssessmentAnalyzer {
         instructions.append(.circle(at: ankle,    radius: 8,  color: .orange,    filled: true))
 
         // Joint labels
-        instructions.append(.text("Knee: \(Int(kneeAngle))\u{00B0}",
+        instructions.append(.text("Knee: \(AngleCalculator.displayDegrees(kneeAngle))\u{00B0}",
             at: SIMD2(knee.x + 0.02, knee.y - 0.04), color: .white, size: 18))
-        instructions.append(.text("Lean: \(Int(torsoLean))\u{00B0}",
+        instructions.append(.text("Lean: \(AngleCalculator.displayDegrees(torsoLean))\u{00B0}",
             at: SIMD2(hip.x + 0.02, hip.y - 0.04), color: .white, size: 16))
 
         // HUD
         let overall = currentMetrics().grade
         instructions.append(.text(overall.rawValue,
             at: SIMD2(0.85, 0.05), color: OverlayColor.romQuality(grade: overall), size: 36))
-        instructions.append(.text("Depth: \(Int(kneeAngle))\u{00B0}",
+        instructions.append(.text("Depth: \(AngleCalculator.displayDegrees(kneeAngle))\u{00B0}",
             at: SIMD2(0.02, 0.05), color: depthColor, size: 18))
-        instructions.append(.text("Flexion: \(Int(180 - kneeAngle))\u{00B0}",
+        instructions.append(.text("Flexion: \(AngleCalculator.displayDegrees(180 - kneeAngle))\u{00B0}",
             at: SIMD2(0.02, 0.11), color: depthColor, size: 18))
-        instructions.append(.text("Torso lean: \(Int(torsoLean))\u{00B0}",
+        instructions.append(.text("Torso lean: \(AngleCalculator.displayDegrees(torsoLean))\u{00B0}",
             at: SIMD2(0.02, 0.17), color: leanColor, size: 18))
 
         return FrameAnalysis(
@@ -152,11 +152,11 @@ final class SquatSagittalAssessment: AssessmentAnalyzer {
         let overall    = max(depthGrade, leanGrade)
 
         var details: [String] = []
-        details.append("Best depth: \(Int(bestKneeAngle))° (\(depthGrade.rawValue))")
-        details.append("Peak knee flexion: \(Int(180 - bestKneeAngle))°")
-        details.append("Torso lean at depth: \(Int(torsoLeanAtBestDepth))° (\(leanGrade.rawValue))")
+        details.append("Best depth: \(AngleCalculator.displayDegrees(bestKneeAngle))° (\(depthGrade.rawValue))")
+        details.append("Peak knee flexion: \(AngleCalculator.displayDegrees(180 - bestKneeAngle))°")
+        details.append("Torso lean at depth: \(AngleCalculator.displayDegrees(torsoLeanAtBestDepth))° (\(leanGrade.rawValue))")
         if worstTorsoLean > torsoLeanAtBestDepth + 10 {
-            details.append("Max lean during set: \(Int(worstTorsoLean))° (mid-rep form check)")
+            details.append("Max lean during set: \(AngleCalculator.displayDegrees(worstTorsoLean))° (mid-rep form check)")
         }
 
         return AssessmentMetrics(

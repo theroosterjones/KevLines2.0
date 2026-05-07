@@ -80,7 +80,7 @@ final class ElbowAnalyzer: ExerciseAnalyzer {
 
         // Angle label near elbow
         let elbowLabel = SIMD2<Float>(elbow.x + 0.03, elbow.y)
-        instructions.append(.text("Elbow: \(Int(elbowAngle))\u{00B0}", at: elbowLabel, color: .white, size: 20))
+        instructions.append(.text("Elbow: \(AngleCalculator.displayDegrees(elbowAngle))\u{00B0}", at: elbowLabel, color: .white, size: 20))
 
         // HUD
         instructions.append(.text("Reps: \(repCounter.count)", at: SIMD2(0.02, 0.05), color: .white, size: 24))

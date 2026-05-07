@@ -90,15 +90,15 @@ final class HipHingeSideAnalyzer: ExerciseAnalyzer {
         instructions.append(.circle(at: ankle,    radius: 8,  color: .orange, filled: true))
 
         // Angle labels
-        instructions.append(.text("Hip: \(Int(hipAngle))\u{00B0}",
+        instructions.append(.text("Hip: \(AngleCalculator.displayDegrees(hipAngle))\u{00B0}",
             at: SIMD2(hip.x + 0.02, hip.y - 0.04), color: .white, size: 20))
-        instructions.append(.text("Knee: \(Int(kneeAngle))\u{00B0}",
+        instructions.append(.text("Knee: \(AngleCalculator.displayDegrees(kneeAngle))\u{00B0}",
             at: SIMD2(knee.x + 0.02, knee.y - 0.04), color: .cyan, size: 18))
 
         // HUD
         instructions.append(.text("Reps: \(repCounter.count)",
             at: SIMD2(0.02, 0.05), color: .white, size: 24))
-        instructions.append(.text("Torso: \(Int(torsoDeg))\u{00B0} fwd",
+        instructions.append(.text("Torso: \(AngleCalculator.displayDegrees(torsoDeg))\u{00B0} fwd",
             at: SIMD2(0.02, 0.11), color: .cyan, size: 18))
 
         return FrameAnalysis(

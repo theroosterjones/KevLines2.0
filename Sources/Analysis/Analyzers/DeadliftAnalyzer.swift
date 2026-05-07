@@ -104,9 +104,9 @@ final class DeadliftAnalyzer: ExerciseAnalyzer {
 
         // Angle labels
         let hipLabelX = hip.x + 0.02
-        instructions.append(.text("Hip: \(Int(hipAngle))\u{00B0}",
+        instructions.append(.text("Hip: \(AngleCalculator.displayDegrees(hipAngle))\u{00B0}",
             at: SIMD2(hipLabelX, hip.y - 0.04), color: .white, size: 20))
-        instructions.append(.text("Knee: \(Int(kneeAngle))\u{00B0}",
+        instructions.append(.text("Knee: \(AngleCalculator.displayDegrees(kneeAngle))\u{00B0}",
             at: SIMD2(knee.x + 0.02, knee.y - 0.04), color: .cyan, size: 18))
 
         // HUD

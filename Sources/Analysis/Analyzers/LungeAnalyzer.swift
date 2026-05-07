@@ -83,9 +83,9 @@ final class LungeAnalyzer: ExerciseAnalyzer {
         instructions.append(.circle(at: ankle,    radius: 8,  color: .orange, filled: true))
 
         // Angle labels
-        instructions.append(.text("Knee: \(Int(kneeAngle))\u{00B0}",
+        instructions.append(.text("Knee: \(AngleCalculator.displayDegrees(kneeAngle))\u{00B0}",
             at: SIMD2(knee.x + 0.02, knee.y - 0.04), color: .white, size: 20))
-        instructions.append(.text("Trunk: \(Int(trunkAngle))\u{00B0}",
+        instructions.append(.text("Trunk: \(AngleCalculator.displayDegrees(trunkAngle))\u{00B0}",
             at: SIMD2(0.02, 0.17), color: .cyan, size: 18))
 
         // HUD

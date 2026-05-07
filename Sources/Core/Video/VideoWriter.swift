@@ -1,8 +1,5 @@
 import AVFoundation
 import CoreVideo
-import os.log
-
-private let logger = Logger(subsystem: "com.kevinjones.KevLines2-0", category: "VideoWriter")
 
 /// Hardware-accelerated video writer using AVAssetWriter.
 /// Replaces cv2.VideoWriter + ffmpeg re-encode with a single VideoToolbox pass.
@@ -51,7 +48,9 @@ final class VideoWriter {
         writer.startWriting()
         writer.startSession(atSourceTime: .zero)
 
-        logger.info("Writer ready: \(width)x\(height) @ \(fps)fps")
+        AnalysisLog.videoWriter.info(
+            "Writer ready \(width, privacy: .public)x\(height, privacy: .public) @ \(fps, privacy: .public) fps"
+        )
     }
 
     /// Append a processed frame at the given presentation time.
@@ -60,7 +59,10 @@ final class VideoWriter {
     func append(pixelBuffer: CVPixelBuffer, at time: CMTime) -> Bool {
         guard writer.status == .writing else {
             if framesWritten == 0 || framesWritten % 100 == 0 {
-                logger.error("Writer not writing (status=\(self.writer.status.rawValue)) after \(self.framesWritten) frames: \(self.writer.error?.localizedDescription ?? "none")")
+                let err = self.writer.error?.localizedDescription ?? "none"
+                AnalysisLog.videoWriter.error(
+                    "Writer not writing status=\(self.writer.status.rawValue, privacy: .public) after \(self.framesWritten, privacy: .public) frames: \(err, privacy: .public)"
+                )
             }
             return false
         }
@@ -70,7 +72,9 @@ final class VideoWriter {
             Thread.sleep(forTimeInterval: 0.005)
             waitCount += 1
             if waitCount > 200 {
-                logger.error("Writer timed out waiting for readiness at frame \(self.framesWritten)")
+                AnalysisLog.videoWriter.error(
+                    "Writer timed out waiting for input readiness frame=\(self.framesWritten, privacy: .public)"
+                )
                 return false
             }
         }
@@ -79,7 +83,10 @@ final class VideoWriter {
         if success {
             framesWritten += 1
         } else {
-            logger.error("Append failed at frame \(self.framesWritten), time=\(CMTimeGetSeconds(time))s: \(self.writer.error?.localizedDescription ?? "unknown")")
+            let err = self.writer.error?.localizedDescription ?? "unknown"
+            AnalysisLog.videoWriter.error(
+                "Append failed frame=\(self.framesWritten, privacy: .public) t=\(CMTimeGetSeconds(time), privacy: .public)s err=\(err, privacy: .public)"
+            )
         }
         return success
     }
@@ -89,9 +96,9 @@ final class VideoWriter {
         videoInput.markAsFinished()
         await writer.finishWriting()
         if let error = writer.error {
-            logger.error("Finalize failed: \(error.localizedDescription)")
+            AnalysisLog.videoWriter.error("Finalize failed: \(error.localizedDescription, privacy: .public)")
             throw error
         }
-        logger.info("Finalized: \(self.framesWritten) frames written")
+        AnalysisLog.videoWriter.info("Finalized \(self.framesWritten, privacy: .public) frames")
     }
 }

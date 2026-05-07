@@ -1,15 +1,38 @@
-# KevLines 3.2 — On-Device Exercise Form Analysis & Movement Assessment
+# KevLines 3.3.2 — On-Device Exercise Form Analysis & Movement Assessment
 
 A fully local iOS app that analyzes exercise videos and movement screens, overlaying biomechanical feedback (joint angles, skeleton, rep counts, tempo phases, letter-graded postural assessments) in real time using the device camera or saved videos. No server, no cloud, no network dependency.
 
+## Documentation map
+
+| Doc | Audience |
+|-----|----------|
+| **[AGENTS.md](AGENTS.md)** | AI assistants / developers — condensed architecture, version pins, pitfalls, links |
+| **[docs/README.md](docs/README.md)** | Index of technical notes in `docs/` |
+| **[docs/VideoOrientation.md](docs/VideoOrientation.md)** | **Required before editing saved-video decode** (`VideoReader`) — orientation vs Photos/QuickTime; why CI tricks failed; **video composition** solution (v3.3.2+) |
+| **[docs/Troubleshooting.md](docs/Troubleshooting.md)** | **Active issues & investigation notes** (e.g. squat/hinge export overlays, saved-video exercise crashes) — version-stamped in the doc |
+
+**Saved-video orientation:** Do not change decode/export without reading **docs/VideoOrientation.md**. Use **`AVMutableVideoComposition` + `AVAssetReaderVideoCompositionOutput`** as in `VideoReader`—not ad-hoc Core Image + `preferredTransform` (upside-down / mirror / left–right bugs).
+
 ## Changelog
+
+### v3.3.2 — Saved-video orientation (AVFoundation composition)
+- **`VideoReader` uses `AVMutableVideoComposition` + `AVAssetReaderVideoCompositionOutput`** — applies `preferredTransform` the same way as QuickTime / Photos / `AVPlayer`, then reads BGRA frames. Replaces hand-rolled Core Image transforms (which mixed CI vs pixel-buffer coordinate systems and caused upside-down, mirrored, or left/right–swapped video vs the source clip). Side selection and overlays again align with how the imported video appears in the library.
+- **Marketing / build** — `3.3.2` (9).
+- **Overlay reliability (follow-up)** — angle HUD strings now use `AngleCalculator.displayDegrees` because **`Int(Float.nan)` traps at runtime** in Swift (could crash Row/Deadlift/saved-video analysis when 3D angles degenerate). `angle3D` and `extendLineToFrame` guard zero-length edges. Open UX issues (squat/hinge assessment overlays on export) are tracked in **[docs/Troubleshooting.md](docs/Troubleshooting.md)**.
+
+### v3.3.1 — Saved-video orientation (mirror fix)
+- **`VideoReader` coordinate order** — replace the post-rotation vertical flip (v3.3.0) with a **CV→Core Image vertical flip applied before `preferredTransform`**. Flipping after rotation corrected upside-down exports but composed incorrectly with the rotation matrix and produced a **left–right mirror** vs the source. Front-loading the flip matches how CI and AVFoundation compose orientation and restores reliable pose + overlays (frontal assessments are sensitive to consistent left/right semantics).
+- **Marketing / build** — `3.3.1` (8).
+
+### v3.3.0 — Saved-video export orientation
+- **`VideoReader` vertical alignment** — after baking `preferredTransform` with Core Image, apply one vertical flip into top-first bitmap layout. Core Image uses a bottom-left origin while decoded video buffers are top-first; without this, analyzed exports (and in-app preview of the output) could appear upside down relative to the source clip in Photos / QuickTime. Affects both **Exercises** and **Assessments** (shared `VideoProcessor` path).
+- **Marketing / build** — `3.3.0` (7).
 
 ### v3.2.0 — Plane-aware Movement Assessments
 - **Front/Back vs Side picker per assessment** — every movement assessment now ships in two camera-plane variants. The picker UI surfaces only the planes a given assessment supports, snaps the side picker on/off automatically (sagittal needs a side, frontal is bilateral), and rewrites both the camera-setup tip and low-tracking warning per plane.
 - **Sagittal Squat Assessment** — strict 90° side profile of the working leg. Grades depth (hip→knee→ankle), exposes peak knee flexion as a clinically familiar number, and grades torso lean against a band rather than purely lower-is-better. Captures lean *at* the bottom (not the worst lean across the clip) so descent/ascent transients don't bias the score.
 - **Frontal Hip Hinge Assessment** — bilateral rear-view hinge screen. Grades hip tilt, shoulder tilt, and worst-knee tracking deviation as a percentage of hip width. Sticky "high-side" labels (e.g. "L hip high 6.4°") so the summary names the asymmetric side, not just its magnitude.
 - **Sagittal Shoulder Flexion** — single-arm side-profile ROM analyzer with automatic side fallback when the user accidentally films the wrong profile (driven by mean per-landmark visibility with hysteresis to prevent flapping).
-- **3.2.2** — build version bump for App Store / TestFlight (`MARKETING_VERSION` 3.2.2, build 6).
 
 ### v3.0.0 — Assessments, HUD modes, Spine landmarks
 - **Movement Assessments** — a new analysis category alongside Exercises. Implements `AssessmentAnalyzer` with letter-graded sub-metrics (A–F), a "weakest-link" overall grade, and a colored skeleton driven by per-frame grade with hysteresis to prevent flicker. Initial set: **Shoulder Flexion** (bilateral overhead ROM with asymmetry detection), **Squat Assessment** (rear-view depth + trunk lean + knee tracking), **Hip Hinge Assessment** (side-view depth + spine neutrality).
@@ -71,13 +94,11 @@ KevLines 1.x ([repository](https://github.com/theroosterjones/KevLines)) used a 
 ┌──────────────────────────────────────────────────────────────────────┐
 │                         SAVED VIDEO PIPELINE                          │
 │                                                                       │
-│  AVAssetReader ──► MediaPipe Pose ──► Frame Analyzer ──► Overlay     │
-│  (HW decode)       Landmarker         • ExerciseAnalyzer  Renderer   │
-│                    (GPU)            ─ or AssessmentAnalyzer (CoreGFX)│
-│                                       • LandmarkSmoother (1€)       │
-│                                       • RepCounter / TempoTracker   │
-│                                       • RepMetricsCollector         │
-│                                       • GradeHysteresis (assessments)│
+│  VideoReader ──► MediaPipe Pose ──► Frame Analyzer ──► Overlay       │
+│  AVMutableComposition +          Landmarker         • Exercise /    │
+│  AVAssetReaderVideoCompositionOutput (GPU)            Assessment    │
+│  (display-oriented BGRA,                              • LandmarkSmoother│
+│   matches Photos / QuickTime)                         • RepCounter … │
 │                                                                  ▼   │
 │                                                          AVAssetWriter│
 │                                                          (HW encode) │
@@ -227,6 +248,10 @@ KevLines2.0/
 │   ├── RepMetricsTests.swift
 │   ├── RowAnalyzerTests.swift
 │   └── AssessmentPlanesTests.swift          # Plane routing + sagittal/frontal analyzer behavior
+├── docs/
+│   ├── README.md                            # Index of technical notes
+│   └── VideoOrientation.md                  # Saved-video decode — do not regress
+├── AGENTS.md                                # AI/developer handoff (start here)
 ├── project.yml                              # XcodeGen spec (incl. MediaPipe plist patch scripts)
 └── README.md
 ```
@@ -274,7 +299,7 @@ The SPM dependency ([SwiftTasksVision](https://github.com/paescebu/SwiftTasksVis
 | Live display | Metal (`MTKView`) | `CVMetalTextureCache` for zero-copy GPU upload |
 | Overlay (live) | SwiftUI Canvas | GPU-accelerated; draws `OverlayInstruction` in norm. coords |
 | Overlay (recorded) | Core Graphics (`CGContext`) | Composites directly onto `CVPixelBuffer` |
-| Video decode | AVAssetReader / VideoToolbox | Hardware-accelerated |
+| Video decode | `VideoReader`: composition + `AVAssetReaderVideoCompositionOutput` | Display-oriented frames match system players; see docs/VideoOrientation.md |
 | Video encode | AVAssetWriter / VideoToolbox | H.264, single pass |
 | Angle math | simd (Accelerate) | `angle()` 2D screen, `angle3D()` metric world |
 | Smoothing | 1€ filter | Adaptive cutoff: smooth at rest, responsive during reps |

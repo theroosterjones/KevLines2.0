@@ -137,22 +137,22 @@ final class ShoulderFlexionAssessment: AssessmentAnalyzer {
         instructions.append(.text("R", at: SIMD2(rShoulder.x + 0.02, rShoulder.y - 0.05), color: .white, size: 18))
 
         // ROM angle labels
-        instructions.append(.text("L: \(Int(leftROM))\u{00B0}",
+        instructions.append(.text("L: \(AngleCalculator.displayDegrees(leftROM))\u{00B0}",
             at: SIMD2(lElbow.x - 0.08, lElbow.y + 0.03), color: .white, size: 18))
-        instructions.append(.text("R: \(Int(rightROM))\u{00B0}",
+        instructions.append(.text("R: \(AngleCalculator.displayDegrees(rightROM))\u{00B0}",
             at: SIMD2(rElbow.x + 0.02, rElbow.y + 0.03), color: .white, size: 18))
 
         // HUD: grade and peak ROM
         let overallGrade = currentMetrics().grade
         instructions.append(.text(overallGrade.rawValue,
             at: SIMD2(0.85, 0.05), color: OverlayColor.romQuality(grade: overallGrade), size: 36))
-        instructions.append(.text("Peak L: \(Int(peakLeftROM))\u{00B0}  R: \(Int(peakRightROM))\u{00B0}",
+        instructions.append(.text("Peak L: \(AngleCalculator.displayDegrees(peakLeftROM))\u{00B0}  R: \(AngleCalculator.displayDegrees(peakRightROM))\u{00B0}",
             at: SIMD2(0.02, 0.05), color: .white, size: 18))
 
         let asymm = abs(peakLeftROM - peakRightROM)
         if asymm > asymmetryThreshold {
             let side = peakLeftROM < peakRightROM ? "Left" : "Right"
-            instructions.append(.text("\(side) restricted by \(Int(asymm))\u{00B0}",
+            instructions.append(.text("\(side) restricted by \(AngleCalculator.displayDegrees(asymm))\u{00B0}",
                 at: SIMD2(0.02, 0.11), color: .orange, size: 16))
         }
 
@@ -176,11 +176,11 @@ final class ShoulderFlexionAssessment: AssessmentAnalyzer {
         let flag = asymm > asymmetryThreshold
 
         var details: [String] = []
-        details.append("Left peak: \(Int(peakLeftROM))° (\(leftGrade.rawValue))")
-        details.append("Right peak: \(Int(peakRightROM))° (\(rightGrade.rawValue))")
+        details.append("Left peak: \(AngleCalculator.displayDegrees(peakLeftROM))° (\(leftGrade.rawValue))")
+        details.append("Right peak: \(AngleCalculator.displayDegrees(peakRightROM))° (\(rightGrade.rawValue))")
         if flag {
             let side = peakLeftROM < peakRightROM ? "Left" : "Right"
-            details.append("\(side) side restricted by \(Int(asymm))°")
+            details.append("\(side) side restricted by \(AngleCalculator.displayDegrees(asymm))°")
         }
 
         return AssessmentMetrics(

@@ -116,13 +116,18 @@ struct AnalysisSummary {
     let tempoBreakdown: [TempoPhase: Double]
     let perRepMetrics: [RepMetric]
     let finalScore: Int?
+    /// Fraction of frames where MediaPipe successfully detected a person (0–1).
+    /// Low values explain missing overlays/reps without needing Console logs.
+    let poseDetectionRate: Float
 
     init(from frames: [FrameAnalysis], duration: Double,
-         repMetrics: [RepMetric] = [], score: Int? = nil) {
+         repMetrics: [RepMetric] = [], score: Int? = nil,
+         poseDetectionRate: Float = 1.0) {
         totalReps = frames.last?.repCount ?? 0
         self.duration = duration
         self.perRepMetrics = repMetrics
         self.finalScore = score
+        self.poseDetectionRate = poseDetectionRate
 
         var angleSums: [JointType: (sum: Float, count: Int)] = [:]
         for frame in frames {

@@ -76,9 +76,9 @@ final class LatPulldownAnalyzer: ExerciseAnalyzer {
         instructions.append(.circle(at: shoulder, radius: 10, color: .red, filled: true))
 
         // Angle labels
-        instructions.append(.text("Elbow: \(Int(elbowAngle))",
+        instructions.append(.text("Elbow: \(AngleCalculator.displayDegrees(elbowAngle))",
             at: SIMD2(elbow.x - 0.05, elbow.y + 0.05), color: .white, size: 20))
-        instructions.append(.text("Shoulder: \(Int(shoulderAngle))",
+        instructions.append(.text("Shoulder: \(AngleCalculator.displayDegrees(shoulderAngle))",
             at: SIMD2(shoulder.x - 0.05, shoulder.y - 0.03), color: .white, size: 20))
 
         // HUD

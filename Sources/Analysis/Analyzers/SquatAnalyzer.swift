@@ -107,7 +107,7 @@ final class SquatAnalyzer: ExerciseAnalyzer {
         }
 
         // Angle label
-        instructions.append(.text("Knee: \(Int(kneeAngle))",
+        instructions.append(.text("Knee: \(AngleCalculator.displayDegrees(kneeAngle))",
             at: SIMD2(knee.x - 0.05, knee.y + 0.05), color: .white, size: 20))
 
         // HUD

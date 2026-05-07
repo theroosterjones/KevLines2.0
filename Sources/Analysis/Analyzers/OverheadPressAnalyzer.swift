@@ -131,9 +131,9 @@ final class OverheadPressAnalyzer: ExerciseAnalyzer {
         instructions.append(.text("R", at: SIMD2(rShoulder.x + 0.02, rShoulder.y - 0.05), color: .blue, size: 18))
 
         // Elbow angle labels
-        instructions.append(.text("L: \(Int(leftElbowAngle))\u{00B0}",
+        instructions.append(.text("L: \(AngleCalculator.displayDegrees(leftElbowAngle))\u{00B0}",
             at: SIMD2(lElbow.x - 0.08, lElbow.y + 0.03), color: .white, size: 18))
-        instructions.append(.text("R: \(Int(rightElbowAngle))\u{00B0}",
+        instructions.append(.text("R: \(AngleCalculator.displayDegrees(rightElbowAngle))\u{00B0}",
             at: SIMD2(rElbow.x + 0.02, rElbow.y + 0.03), color: .white, size: 18))
 
         // HUD

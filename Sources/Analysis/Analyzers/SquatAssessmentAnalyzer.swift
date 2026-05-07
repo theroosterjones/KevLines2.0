@@ -159,9 +159,9 @@ final class SquatAssessmentAnalyzer: AssessmentAnalyzer {
         let overall = currentMetrics().grade
         instructions.append(.text(overall.rawValue,
             at: SIMD2(0.85, 0.05), color: OverlayColor.romQuality(grade: overall), size: 36))
-        instructions.append(.text("Depth: \(Int(avgKneeAngle))\u{00B0}",
+        instructions.append(.text("Depth: \(AngleCalculator.displayDegrees(avgKneeAngle))\u{00B0}",
             at: SIMD2(0.02, 0.05), color: depthColor, size: 18))
-        instructions.append(.text("Trunk: \(Int(trunkLeanDeg))\u{00B0}",
+        instructions.append(.text("Trunk: \(AngleCalculator.displayDegrees(trunkLeanDeg))\u{00B0}",
             at: SIMD2(0.02, 0.11), color: trunkColor, size: 18))
         instructions.append(.text("Knee: \(String(format: "%.0f", worstKneeOff))%",
             at: SIMD2(0.02, 0.17), color: kneeColor, size: 18))
@@ -185,8 +185,8 @@ final class SquatAssessmentAnalyzer: AssessmentAnalyzer {
         let overall    = max(depthGrade, max(trunkGrade, kneeGrade))
 
         var details: [String] = []
-        details.append("Best depth: \(Int(bestDepthAngle))° (\(depthGrade.rawValue))")
-        details.append("Best trunk lean: \(Int(bestTrunkLean))° (\(trunkGrade.rawValue))")
+        details.append("Best depth: \(AngleCalculator.displayDegrees(bestDepthAngle))° (\(depthGrade.rawValue))")
+        details.append("Best trunk lean: \(AngleCalculator.displayDegrees(bestTrunkLean))° (\(trunkGrade.rawValue))")
         details.append("Best knee tracking: \(String(format: "%.0f", bestKneeTracking))% (\(kneeGrade.rawValue))")
 
         return AssessmentMetrics(

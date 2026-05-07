@@ -38,4 +38,25 @@ final class AngleCalculatorTests: XCTestCase {
         XCTAssertEqual(start.y, 100, accuracy: 1.0)
         XCTAssertEqual(end.y, 100, accuracy: 1.0)
     }
+
+    func testExtendLineToFrameDegenerateReturnsEndpoints() {
+        let p = SIMD2<Float>(50, 50)
+        let (a, b) = AngleCalculator.extendLineToFrame(p1: p, p2: p, width: 100, height: 100)
+        XCTAssertEqual(a.x, p.x, accuracy: 0.01)
+        XCTAssertEqual(a.y, p.y, accuracy: 0.01)
+        XCTAssertEqual(b.x, p.x, accuracy: 0.01)
+        XCTAssertEqual(b.y, p.y, accuracy: 0.01)
+    }
+
+    func testDisplayDegreesNonFiniteIsSafe() {
+        XCTAssertEqual(AngleCalculator.displayDegrees(.nan), 0)
+        XCTAssertEqual(AngleCalculator.displayDegrees(.infinity), 0)
+        XCTAssertEqual(AngleCalculator.displayDegrees(42.7), 42)
+    }
+
+    func testAngle3DDegenerateReturnsNan() {
+        let b = SIMD3<Float>(0, 0, 0)
+        let angle = AngleCalculator.angle3D(a: b, b: b, c: SIMD3<Float>(1, 0, 0))
+        XCTAssertTrue(angle.isNaN)
+    }
 }

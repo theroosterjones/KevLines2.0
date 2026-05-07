@@ -1,8 +1,5 @@
 import AVFoundation
 import CoreVideo
-import os.log
-
-private let logger = Logger(subsystem: "com.kevinjones.KevLines2-0", category: "VideoProcessor")
 
 /// Orchestrates the full local pipeline: read -> pose -> analyze -> overlay -> write.
 final class VideoProcessor: ObservableObject {
@@ -51,15 +48,22 @@ final class VideoProcessor: ObservableObject {
             transform: reader.outputTransform
         )
 
-        logger.info("Pipeline start: \(reader.outputWidth)x\(reader.outputHeight) (native \(reader.nativeWidth)x\(reader.nativeHeight)), ~\(reader.estimatedFrameCount) frames, \(CMTimeGetSeconds(reader.duration))s")
+        let analyzerName = AnalysisLog.analyzerLabel(analyzer)
+        AnalysisLog.pipeline.info(
+            "Analyze start input=\(inputURL.lastPathComponent, privacy: .public) output=\(outputURL.lastPathComponent, privacy: .public) analyzer=\(analyzerName, privacy: .public) overlayMode=\(String(describing: overlayMode), privacy: .public) size=\(reader.outputWidth, privacy: .public)x\(reader.outputHeight, privacy: .public) native=\(reader.nativeWidth, privacy: .public)x\(reader.nativeHeight, privacy: .public) frames≈\(reader.estimatedFrameCount, privacy: .public) duration=\(CMTimeGetSeconds(reader.duration), privacy: .public)s"
+        )
 
         analyzer.reset()
 
         let result: AnalysisSummary = try await Task.detached(priority: .userInitiated) {
             [poseLandmarker, overlayRenderer] in
 
+            poseLandmarker.resetSessionDiagnostics()
+
             var allFrameResults: [FrameAnalysis] = []
             var poseDetections = 0
+            var poseMissFrames = 0
+            var framesPoseOkEmptyOverlay = 0
             var writeFailures = 0
             let metricsCollector = RepMetricsCollector()
 
@@ -76,7 +80,11 @@ final class VideoProcessor: ObservableObject {
                 if let poseResult {
                     frameResult = analyzer.analyze(landmarks: poseResult)
                     poseDetections += 1
+                    if frameResult.overlayInstructions.isEmpty {
+                        framesPoseOkEmptyOverlay += 1
+                    }
                 } else {
+                    poseMissFrames += 1
                     frameResult = FrameAnalysis.empty
                 }
                 allFrameResults.append(frameResult)
@@ -105,9 +113,14 @@ final class VideoProcessor: ObservableObject {
                 )
 
                 if !writer.append(pixelBuffer: pixelBuffer, at: time) {
+                    if writeFailures == 0 {
+                        AnalysisLog.pipeline.error(
+                            "First writer append failure frame=\(allFrameResults.count, privacy: .public) t=\(CMTimeGetSeconds(time), privacy: .public)s — check VideoWriter logs"
+                        )
+                    }
                     writeFailures += 1
                     if writeFailures > 5 {
-                        logger.error("Too many write failures, stopping pipeline")
+                        AnalysisLog.pipeline.error("Too many write failures — stopping pipeline early")
                         break
                     }
                 }
@@ -120,20 +133,32 @@ final class VideoProcessor: ObservableObject {
                 }
             }
 
-            try await writer.finalize()
+            do {
+                try await writer.finalize()
+            } catch {
+                AnalysisLog.pipeline.error(
+                    "Writer finalize failed: \(error.localizedDescription, privacy: .public)"
+                )
+                throw error
+            }
 
             let totalFrames = allFrameResults.count
-            logger.info("Pipeline done: \(totalFrames) frames, \(poseDetections) detections (\(totalFrames > 0 ? Int(Float(poseDetections) / Float(totalFrames) * 100) : 0)%), \(writeFailures) write failures")
+            let detPct = totalFrames > 0 ? Int(Float(poseDetections) / Float(totalFrames) * 100) : 0
+            AnalysisLog.pipeline.info(
+                "Analyze done frames=\(totalFrames, privacy: .public) poseHits=\(poseDetections, privacy: .public) (\(detPct, privacy: .public)%) poseMiss=\(poseMissFrames, privacy: .public) poseOkEmptyOverlay=\(framesPoseOkEmptyOverlay, privacy: .public) writeFailures=\(writeFailures, privacy: .public)"
+            )
 
             await MainActor.run {
                 self.progress = 1.0
             }
 
+            let detectionRate = totalFrames > 0 ? Float(poseDetections) / Float(totalFrames) : 0
             return AnalysisSummary(
                 from: allFrameResults,
                 duration: CMTimeGetSeconds(reader.duration),
                 repMetrics: metricsCollector.completedReps,
-                score: metricsCollector.computeScore()
+                score: metricsCollector.computeScore(),
+                poseDetectionRate: detectionRate
             )
         }.value
 

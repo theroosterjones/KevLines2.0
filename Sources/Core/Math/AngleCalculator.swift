@@ -13,11 +13,22 @@ struct AngleCalculator {
         return deg
     }
 
+    /// Integer degrees safe for UI strings. Plain `Int(nonFinite)` traps at runtime in Swift.
+    static func displayDegrees(_ degrees: Float) -> Int {
+        guard degrees.isFinite else { return 0 }
+        return Int(degrees.rounded(.towardZero))
+    }
+
     /// Compute the true 3D interior angle at vertex `b` using metric world coordinates.
     /// Camera-position-independent. Returns degrees in the range [0, 180].
     static func angle3D(a: SIMD3<Float>, b: SIMD3<Float>, c: SIMD3<Float>) -> Float {
-        let v1 = simd_normalize(a - b)
-        let v2 = simd_normalize(c - b)
+        let e1 = a - b
+        let e2 = c - b
+        guard simd_length_squared(e1) > 1e-12, simd_length_squared(e2) > 1e-12 else {
+            return .nan
+        }
+        let v1 = simd_normalize(e1)
+        let v2 = simd_normalize(e2)
         // Clamp to [-1, 1] to guard against floating-point drift past the acos domain
         let cosTheta = max(-1.0, min(1.0, simd_dot(v1, v2)))
         return acos(cosTheta) * 180.0 / .pi
@@ -31,7 +42,11 @@ struct AngleCalculator {
         width: Float,
         height: Float
     ) -> (SIMD2<Float>, SIMD2<Float>) {
-        let dir = simd_normalize(p2 - p1)
+        let seg = p2 - p1
+        guard simd_length_squared(seg) > 1e-8 else {
+            return (p1, p2)
+        }
+        let dir = simd_normalize(seg)
         let forward  = edgeIntersection(origin: p1, direction: dir, width: width, height: height)
         let backward = edgeIntersection(origin: p2, direction: -dir, width: width, height: height)
         return (forward ?? p1, backward ?? p2)

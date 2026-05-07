@@ -113,8 +113,10 @@ extension ExerciseType {
     /// Short setup guidance shown before analysis starts.
     var cameraSetupTip: String {
         switch self {
-        case .squat, .deadlift, .lunge, .hipHingeSide:
+        case .squat, .lunge, .hipHingeSide:
             return "Use a strict side profile (about 90°). Keep the full working side visible from shoulder to ankle."
+        case .deadlift:
+            return "Film at a slight forward angle (15–30° off true side) so the barbell doesn't block your hip. Keep shoulder, hip, knee, and ankle all visible."
         case .row, .latPulldown, .elbowCurl:
             return "Use a strict side profile (about 90°). Keep the full working side visible from shoulder to ankle."
         case .overheadPress:
@@ -129,8 +131,10 @@ extension ExerciseType {
     /// Non-blocking warning shown when pose tracking quality is persistently low.
     var lowTrackingWarning: String {
         switch self {
-        case .squat, .deadlift, .lunge, .hipHingeSide:
+        case .squat, .lunge, .hipHingeSide:
             return "Tracking is unstable. Reposition camera to a strict side profile and keep your full body in frame."
+        case .deadlift:
+            return "Tracking lost — the barbell may be blocking your hip. Try a slight forward angle (15–30° off the side) and ensure shoulder, hip, knee, and ankle are all visible."
         case .row, .latPulldown, .elbowCurl:
             return "Tracking is unstable. Reposition camera to a strict side profile and keep your full body in frame."
         case .overheadPress:

@@ -1,9 +1,6 @@
 import AVFoundation
 import UIKit
 import MediaPipeTasksVision
-import os.log
-
-private let logger = Logger(subsystem: "com.kevinjones.KevLines2-0", category: "PoseLandmarker")
 
 /// Wraps the MediaPipe Pose Landmarker iOS SDK.
 /// Call `detect(pixelBuffer:timestampMs:)` for each video frame.
@@ -19,10 +16,22 @@ final class PoseLandmarkerService {
     private let config: AnalysisConfig
     private var poseLandmarker: PoseLandmarker?
 
+    /// Avoid logging every frame when the model never loaded (would flood Console).
+    private var loggedNilLandmarker = false
+    /// Sample first few hard failures so Console stays readable without per-frame cost.
+    private var mpImageFailureLogCount = 0
+    private var detectFailureLogCount = 0
+
     init(config: AnalysisConfig = .default) {
         self.config = config
         self.modelType = config.modelType
         setupLandmarker()
+    }
+
+    /// Clears sampled failure counters so each saved-video run can log fresh samples (same service instance may be reused).
+    func resetSessionDiagnostics() {
+        mpImageFailureLogCount = 0
+        detectFailureLogCount = 0
     }
 
     // MARK: - Setup
@@ -32,11 +41,11 @@ final class PoseLandmarkerService {
             forResource: modelType.rawValue,
             ofType: "task"
         ) else {
-            logger.error("Missing \(self.modelType.rawValue).task in app bundle")
+            AnalysisLog.pose.error("Missing \(self.modelType.rawValue, privacy: .public).task in app bundle")
             return
         }
 
-        logger.info("Found model at: \(modelPath)")
+        AnalysisLog.pose.info("Model path \(modelPath, privacy: .public)")
 
         let options = PoseLandmarkerOptions()
         options.baseOptions.modelAssetPath = modelPath
@@ -47,9 +56,9 @@ final class PoseLandmarkerService {
 
         do {
             poseLandmarker = try PoseLandmarker(options: options)
-            logger.info("PoseLandmarker initialized successfully")
+            AnalysisLog.pose.info("PoseLandmarker initialized")
         } catch {
-            logger.error("Failed to create PoseLandmarker: \(error.localizedDescription)")
+            AnalysisLog.pose.error("PoseLandmarker init failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -58,7 +67,10 @@ final class PoseLandmarkerService {
     /// Run pose detection on a single video frame.
     func detect(pixelBuffer: CVPixelBuffer, timestampMs: Int) -> PoseResult? {
         guard let poseLandmarker else {
-            logger.warning("PoseLandmarker is nil — model failed to load")
+            if !loggedNilLandmarker {
+                AnalysisLog.pose.error("PoseLandmarker nil — model not loaded (further messages suppressed)")
+                loggedNilLandmarker = true
+            }
             return nil
         }
 
@@ -66,7 +78,12 @@ final class PoseLandmarkerService {
         do {
             mpImage = try MPImage(pixelBuffer: pixelBuffer)
         } catch {
-            logger.error("MPImage creation failed: \(error.localizedDescription)")
+            if mpImageFailureLogCount < 3 {
+                AnalysisLog.pose.error(
+                    "MPImage failed at \(timestampMs, privacy: .public)ms: \(error.localizedDescription, privacy: .public) (sample \(self.mpImageFailureLogCount + 1)/3)"
+                )
+            }
+            mpImageFailureLogCount += 1
             return nil
         }
 
@@ -74,10 +91,16 @@ final class PoseLandmarkerService {
         do {
             result = try poseLandmarker.detect(videoFrame: mpImage, timestampInMilliseconds: timestampMs)
         } catch {
-            logger.error("Pose detection failed at \(timestampMs)ms: \(error.localizedDescription)")
+            if detectFailureLogCount < 3 {
+                AnalysisLog.pose.error(
+                    "detect() threw at \(timestampMs, privacy: .public)ms: \(error.localizedDescription, privacy: .public) (sample \(self.detectFailureLogCount + 1)/3)"
+                )
+            }
+            detectFailureLogCount += 1
             return nil
         }
 
+        // No landmarks: silent here — VideoProcessor aggregates poseMiss vs poseOkEmptyOverlay.
         guard let poseLandmarks = result.landmarks.first else { return nil }
 
         // 2D normalized landmarks (for overlay drawing)

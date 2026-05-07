@@ -111,14 +111,14 @@ final class HipHingeAssessmentAnalyzer: AssessmentAnalyzer {
         }
 
         // Angle labels
-        instructions.append(.text("Hip: \(Int(hipAngle))\u{00B0}",
+        instructions.append(.text("Hip: \(AngleCalculator.displayDegrees(hipAngle))\u{00B0}",
             at: SIMD2(hip.x + 0.02, hip.y - 0.04), color: .white, size: 20))
 
         // HUD
         let overall = currentMetrics().grade
         instructions.append(.text(overall.rawValue,
             at: SIMD2(0.85, 0.05), color: OverlayColor.romQuality(grade: overall), size: 36))
-        instructions.append(.text("Hinge: \(Int(hipAngle))\u{00B0}",
+        instructions.append(.text("Hinge: \(AngleCalculator.displayDegrees(hipAngle))\u{00B0}",
             at: SIMD2(0.02, 0.05), color: depthColor, size: 18))
         instructions.append(.text("Spine: \(String(format: "%.1f", spineDev))\u{00B0} dev",
             at: SIMD2(0.02, 0.11), color: spineColor, size: 18))
@@ -141,7 +141,7 @@ final class HipHingeAssessmentAnalyzer: AssessmentAnalyzer {
         let overall = max(depthGrade, spineGrade)
 
         var details: [String] = []
-        details.append("Best hinge depth: \(Int(bestHipAngle))° (\(depthGrade.rawValue))")
+        details.append("Best hinge depth: \(AngleCalculator.displayDegrees(bestHipAngle))° (\(depthGrade.rawValue))")
         details.append("Best spine neutrality: \(String(format: "%.1f", bestSpineDev))° (\(spineGrade.rawValue))")
 
         return AssessmentMetrics(

@@ -102,7 +102,7 @@ struct ExerciseView: View {
                 }
                 .padding(.bottom, 40)
             }
-            .navigationTitle("KevLines 3.2.2")
+            .navigationTitle("KevLines 3.3.2")
             .alert("Error", isPresented: $showingError) {
                 Button("OK") { }
             } message: {
@@ -355,6 +355,8 @@ struct ExerciseView: View {
 
             Text("Duration: \(String(format: "%.1f", summary.duration))s")
 
+            trackingRateRow(rate: summary.poseDetectionRate)
+
             ForEach(summary.averageAngles, id: \.joint) { angle in
                 if selectedExerciseType == .shoulderAssessment, angle.joint == .shoulder {
                 } else {
@@ -378,6 +380,10 @@ struct ExerciseView: View {
                 Text(metrics.grade.rawValue)
                     .font(.system(size: 36, weight: .bold, design: .rounded))
                     .foregroundStyle(gradeColor(metrics.grade))
+            }
+
+            if let rate = analysisSummary?.poseDetectionRate {
+                trackingRateRow(rate: rate)
             }
 
             ForEach(metrics.subGrades, id: \.label) { sub in
@@ -417,6 +423,27 @@ struct ExerciseView: View {
         .background(Color(.systemGray6))
         .cornerRadius(12)
         .padding(.horizontal)
+    }
+
+    /// Colour-coded tracking quality row. Shows % of frames where MediaPipe detected a person.
+    /// Red < 40%, yellow 40–69%, green ≥ 70%. Helps diagnose missing overlays without Console.
+    @ViewBuilder
+    private func trackingRateRow(rate: Float) -> some View {
+        let pct = Int((rate * 100).rounded())
+        let color: Color = pct >= 70 ? .green : pct >= 40 ? .yellow : .red
+        HStack(spacing: 4) {
+            Image(systemName: pct >= 70 ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                .foregroundStyle(color)
+                .imageScale(.small)
+            Text("Pose tracked: \(pct)% of frames")
+                .font(.caption)
+                .foregroundStyle(pct >= 70 ? .secondary : color)
+            if pct < 40 {
+                Text("— improve framing or lighting")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 
     private func gradeColor(_ grade: LetterGrade) -> Color {
@@ -531,6 +558,10 @@ struct ExerciseView: View {
                 player = AVPlayer(url: outputURL)
             }
         } catch {
+            let ns = error as NSError
+            AnalysisLog.ui.error(
+                "analyzeVideo failed domain=\(ns.domain, privacy: .public) code=\(ns.code, privacy: .public) \(error.localizedDescription, privacy: .public)"
+            )
             await MainActor.run {
                 errorMessage = "Analysis failed: \(error.localizedDescription)"
                 showingError = true

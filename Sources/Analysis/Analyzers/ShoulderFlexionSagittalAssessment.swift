@@ -114,16 +114,16 @@ final class ShoulderFlexionSagittalAssessment: AssessmentAnalyzer {
         instructions.append(.text(activeSide == .left ? "Left arm" : "Right arm",
             at: SIMD2(shoulder.x + 0.02, shoulder.y - 0.05), color: .white, size: 16))
 
-        instructions.append(.text("\(Int(rom))\u{00B0}",
+        instructions.append(.text("\(AngleCalculator.displayDegrees(rom))\u{00B0}",
             at: SIMD2(elbow.x + 0.02, elbow.y), color: .white, size: 18))
 
         // HUD
         let overall = currentMetrics().grade
         instructions.append(.text(overall.rawValue,
             at: SIMD2(0.85, 0.05), color: OverlayColor.romQuality(grade: overall), size: 36))
-        instructions.append(.text("ROM: \(Int(rom))\u{00B0}",
+        instructions.append(.text("ROM: \(AngleCalculator.displayDegrees(rom))\u{00B0}",
             at: SIMD2(0.02, 0.05), color: romColor, size: 20))
-        instructions.append(.text("Peak: \(Int(peakROM))\u{00B0}",
+        instructions.append(.text("Peak: \(AngleCalculator.displayDegrees(peakROM))\u{00B0}",
             at: SIMD2(0.02, 0.11), color: .white, size: 18))
 
         return FrameAnalysis(
@@ -145,7 +145,7 @@ final class ShoulderFlexionSagittalAssessment: AssessmentAnalyzer {
         let rightROM: Float? = activeSideAtPeak == .right ? peakROM : nil
 
         var details: [String] = []
-        details.append("Peak ROM (\(activeSideAtPeak == .left ? "L" : "R") arm): \(Int(peakROM))° (\(romGrade.rawValue))")
+        details.append("Peak ROM (\(activeSideAtPeak == .left ? "L" : "R") arm): \(AngleCalculator.displayDegrees(peakROM))° (\(romGrade.rawValue))")
         if activeSideAtPeak != preferredSide {
             details.append("Auto-switched to \(activeSideAtPeak == .left ? "L" : "R") side based on landmark visibility")
         }

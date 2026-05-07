@@ -89,8 +89,8 @@ final class RowAnalyzer: ExerciseAnalyzer {
         let elbowLabel = SIMD2<Float>(elbow.x - 0.05, elbow.y + 0.05)
         let shoulderLabel = SIMD2<Float>(shoulder.x - 0.05, shoulder.y - 0.03)
 
-        instructions.append(.text("Elbow: \(Int(elbowAngle))", at: elbowLabel, color: .white, size: 20))
-        instructions.append(.text("Shoulder: \(Int(shoulderAngle))", at: shoulderLabel, color: .white, size: 20))
+        instructions.append(.text("Elbow: \(AngleCalculator.displayDegrees(elbowAngle))", at: elbowLabel, color: .white, size: 20))
+        instructions.append(.text("Shoulder: \(AngleCalculator.displayDegrees(shoulderAngle))", at: shoulderLabel, color: .white, size: 20))
 
         if let oppShoulder {
             let chest = (shoulder + oppShoulder) / 2.0

@@ -1,164 +1,162 @@
 import AVFoundation
-import CoreImage
 import CoreVideo
-import os.log
-
-private let logger = Logger(subsystem: "com.kevinjones.KevLines2-0", category: "VideoReader")
 
 /// Hardware-accelerated video frame reader using AVAssetReader.
 ///
-/// iPhone-recorded videos store their pixel buffers in a fixed native orientation
-/// (typically 1920×1080 landscape) and rely on a `preferredTransform` rotation tag
-/// to display upright. MediaPipe's pose model, however, ignores container metadata
-/// and operates directly on pixels — so feeding it the raw landscape buffer for a
-/// portrait-recorded clip means the model sees a horizontal-lying human and very
-/// often fails to detect a pose at all (returning zero overlays, reps, and tempo
-/// downstream).
+/// iPhone-recorded videos store pixel buffers in native storage orientation and rely on
+/// `preferredTransform` so QuickTime / Photos display upright. MediaPipe ignores that
+/// metadata, so we must feed pixels that match **what the user sees** in those apps.
 ///
-/// To avoid that, this reader bakes the `preferredTransform` into the pixel buffer
-/// before returning it. Callers receive an upright buffer of size
-/// `outputWidth × outputHeight` and can pair it with `outputTransform` (always
-/// `.identity`) when configuring downstream writers.
+/// **Implementation:** we route decoding through `AVMutableVideoComposition` +
+/// `AVAssetReaderVideoCompositionOutput`. AVFoundation applies the same transform math
+/// as playback, producing upright BGRA frames—no manual Core Image rotation (which
+/// mixed coordinate systems and produced upside-down, mirrored, or left/right–swapped
+/// output relative to the saved clip). Writers keep `outputTransform = .identity`.
 final class VideoReader {
 
-    /// Native pixel dimensions (before applying `preferredTransform`). Kept for
-    /// debugging / logging; downstream code should use `outputWidth/Height`.
+    /// Native pixel dimensions (decoder buffer before display transform). For logs only.
     let nativeWidth: Int
     let nativeHeight: Int
 
-    /// Display dimensions (after applying `preferredTransform`).
+    /// Dimensions of each frame returned by `nextFrame()` (display-oriented pixels).
     let displayWidth: Int
     let displayHeight: Int
 
-    /// Dimensions of the pixel buffer returned by `nextFrame()`. After rotation
-    /// these equal `displayWidth/displayHeight`.
     var outputWidth: Int { displayWidth }
     var outputHeight: Int { displayHeight }
 
-    /// The transform downstream writers should apply. Always `.identity` because
-    /// the rotation has already been baked into the pixel buffer.
+    /// Writers use `.identity` — orientation is already baked by the video composition.
     var outputTransform: CGAffineTransform { .identity }
 
     let fps: Float
     let duration: CMTime
     let estimatedFrameCount: Int
 
-    /// The track's preferred transform (rotation metadata from the camera).
-    /// Exposed for diagnostics; downstream writers should use `outputTransform`.
+    /// The source track’s preferred transform (diagnostics).
     let preferredTransform: CGAffineTransform
 
     private let reader: AVAssetReader
-    private let output: AVAssetReaderTrackOutput
+    private let output: AVAssetReaderVideoCompositionOutput
+
     private(set) var currentTime: CMTime = .zero
     private var frameIndex: Int = 0
 
-    /// Retains the current sample buffer so the pixel buffer stays valid
-    /// until the next call to nextFrame().
     private var retainedSampleBuffer: CMSampleBuffer?
-
-    // Rotation pipeline. When `needsRotation` is false we pass through the
-    // decoder's buffer unchanged; otherwise we render a rotated copy via
-    // `ciContext` into buffers vended from `bufferPool`.
-    private let needsRotation: Bool
-    private let translationToOrigin: CGAffineTransform
-    private let ciContext: CIContext
-    private let bufferPool: CVPixelBufferPool?
 
     init(url: URL) throws {
         let asset = AVURLAsset(url: url, options: [
             AVURLAssetPreferPreciseDurationAndTimingKey: true
         ])
 
-        guard let track = asset.tracks(withMediaType: .video).first else {
+        guard let videoTrack = asset.tracks(withMediaType: .video).first else {
             throw VideoReaderError.noVideoTrack
         }
 
-        let nativeSize = track.naturalSize
+        let nativeSize = videoTrack.naturalSize
         nativeWidth = Int(nativeSize.width)
         nativeHeight = Int(nativeSize.height)
 
-        let transform = track.preferredTransform
+        let transform = videoTrack.preferredTransform
         preferredTransform = transform
 
-        let displaySize = nativeSize.applying(transform)
-        displayWidth = Int(abs(displaySize.width))
-        displayHeight = Int(abs(displaySize.height))
-
-        fps = track.nominalFrameRate
-        duration = asset.duration
-        estimatedFrameCount = Int(Float(CMTimeGetSeconds(duration)) * fps)
-
-        // A non-identity transform means the encoded pixels disagree with the
-        // intended display orientation; we'll need to rotate every frame.
-        needsRotation = !transform.isIdentity
-
-        // After applying `transform` the resulting CIImage extent's origin can be
-        // negative (e.g. y = -height for a 90° rotation); we translate it back
-        // into the [0, displayWidth] × [0, displayHeight] range so the rendered
-        // buffer is fully populated.
-        let probeRect = CGRect(x: 0, y: 0, width: nativeSize.width, height: nativeSize.height)
-            .applying(transform)
-        translationToOrigin = CGAffineTransform(
-            translationX: -probeRect.origin.x,
-            y: -probeRect.origin.y
+        // Bounding box of the transformed natural rect → render size (matches AVPlayer).
+        let transformedVideoRect = CGRect(origin: .zero, size: nativeSize).applying(transform)
+        let renderSize = CGSize(
+            width: abs(transformedVideoRect.width),
+            height: abs(transformedVideoRect.height)
         )
+        displayWidth = Int(renderSize.width.rounded())
+        displayHeight = Int(renderSize.height.rounded())
 
-        ciContext = CIContext(options: [.useSoftwareRenderer: false])
+        fps = videoTrack.nominalFrameRate
+        duration = asset.duration
+        let fpsForEstimate = fps > 0 ? fps : 30
+        estimatedFrameCount = Int(Float(CMTimeGetSeconds(duration)) * fpsForEstimate)
 
-        if needsRotation {
-            let attrs: [String: Any] = [
-                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-                kCVPixelBufferWidthKey as String: displayWidth,
-                kCVPixelBufferHeightKey as String: displayHeight,
-                kCVPixelBufferIOSurfacePropertiesKey as String: [:] as [String: Any]
-            ]
-            var pool: CVPixelBufferPool?
-            CVPixelBufferPoolCreate(nil, nil, attrs as CFDictionary, &pool)
-            bufferPool = pool
-            if pool == nil {
-                logger.error("Failed to create rotation buffer pool (\(self.displayWidth)x\(self.displayHeight))")
-            }
-        } else {
-            bufferPool = nil
+        // Shift composed output so the rotated rect sits in +x,+y (standard composition recipe).
+        let translateToPositiveOrigin = CGAffineTransform(
+            translationX: -transformedVideoRect.origin.x,
+            y: -transformedVideoRect.origin.y
+        )
+        let combinedTransform = transform.concatenating(translateToPositiveOrigin)
+
+        let composition = AVMutableComposition()
+        guard let compositionVideoTrack = composition.addMutableTrack(
+            withMediaType: .video,
+            preferredTrackID: kCMPersistentTrackID_Invalid
+        ) else {
+            throw VideoReaderError.compositionFailed
         }
 
-        logger.info("Video: \(self.nativeWidth)x\(self.nativeHeight) native, \(self.displayWidth)x\(self.displayHeight) display, rotated=\(self.needsRotation), \(self.fps) fps, \(CMTimeGetSeconds(self.duration))s, ~\(self.estimatedFrameCount) frames")
+        try compositionVideoTrack.insertTimeRange(
+            CMTimeRange(start: .zero, duration: asset.duration),
+            of: videoTrack,
+            at: .zero
+        )
 
-        reader = try AVAssetReader(asset: asset)
+        let layerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: compositionVideoTrack)
+        layerInstruction.setTransform(combinedTransform, at: .zero)
 
-        output = AVAssetReaderTrackOutput(track: track, outputSettings: [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-        ])
+        let mainInstruction = AVMutableVideoCompositionInstruction()
+        mainInstruction.timeRange = CMTimeRange(start: .zero, duration: composition.duration)
+        mainInstruction.layerInstructions = [layerInstruction]
+
+        let videoComposition = AVMutableVideoComposition()
+        videoComposition.renderSize = renderSize
+        let nominal = videoTrack.nominalFrameRate
+        let timescale: Int32 = nominal > 0 ? max(1, Int32(nominal.rounded())) : 30
+        videoComposition.frameDuration = CMTime(value: 1, timescale: timescale)
+        videoComposition.instructions = [mainInstruction]
+
+        reader = try AVAssetReader(asset: composition)
+
+        output = AVAssetReaderVideoCompositionOutput(
+            videoTracks: [compositionVideoTrack],
+            videoSettings: [
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+            ]
+        )
+        output.videoComposition = videoComposition
         output.alwaysCopiesSampleData = true
 
         reader.add(output)
         reader.startReading()
+
+        AnalysisLog.videoReader.info(
+            "Composition decode \(self.nativeWidth, privacy: .public)x\(self.nativeHeight, privacy: .public) native → \(self.displayWidth, privacy: .public)x\(self.displayHeight, privacy: .public) display \(self.fps, privacy: .public) fps \(CMTimeGetSeconds(self.duration), privacy: .public)s ~\(self.estimatedFrameCount, privacy: .public) frames"
+        )
     }
 
-    /// Pull the next decoded frame, with `preferredTransform` already applied.
-    /// Returns nil at end of video or on error. The returned pixel buffer stays
-    /// valid until the next call to `nextFrame()`.
+    /// Decoded frame in display orientation (matches Photos / QuickTime).
     func nextFrame() -> (pixelBuffer: CVPixelBuffer, time: CMTime)? {
         guard reader.status == .reading else {
             if reader.status == .failed {
-                logger.error("AVAssetReader failed at frame \(self.frameIndex): \(self.reader.error?.localizedDescription ?? "unknown")")
+                let err = self.reader.error?.localizedDescription ?? "unknown"
+                AnalysisLog.videoReader.error(
+                    "AVAssetReader failed at frame \(self.frameIndex, privacy: .public): \(err, privacy: .public)"
+                )
             } else {
-                logger.info("Reader status \(String(describing: self.reader.status)) at frame \(self.frameIndex)")
+                AnalysisLog.videoReader.info(
+                    "Reader ended status=\(String(describing: self.reader.status), privacy: .public) frame=\(self.frameIndex, privacy: .public)"
+                )
             }
             return nil
         }
 
         guard let sampleBuffer = output.copyNextSampleBuffer() else {
             if reader.status == .failed {
-                logger.error("Reader failed after \(self.frameIndex) frames: \(self.reader.error?.localizedDescription ?? "unknown")")
+                let err = self.reader.error?.localizedDescription ?? "unknown"
+                AnalysisLog.videoReader.error(
+                    "Reader failed after \(self.frameIndex, privacy: .public) frames: \(err, privacy: .public)"
+                )
             } else {
-                logger.info("Finished reading: \(self.frameIndex) frames")
+                AnalysisLog.videoReader.info("Finished reading \(self.frameIndex, privacy: .public) frames")
             }
             return nil
         }
 
-        guard let rawBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
-            logger.warning("Frame \(self.frameIndex): no image buffer in sample")
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+            AnalysisLog.videoReader.error("Frame \(self.frameIndex, privacy: .public): no image buffer in sample")
             return nil
         }
 
@@ -167,30 +165,7 @@ final class VideoReader {
         currentTime = pts
         frameIndex += 1
 
-        if !needsRotation {
-            return (rawBuffer, pts)
-        }
-
-        guard let pool = bufferPool else {
-            // Pool failed to initialize — fall back to the un-rotated buffer so
-            // the pipeline at least produces output, even if MediaPipe will be
-            // unhappy with the orientation.
-            return (rawBuffer, pts)
-        }
-
-        var rotated: CVPixelBuffer?
-        let status = CVPixelBufferPoolCreatePixelBuffer(nil, pool, &rotated)
-        guard status == kCVReturnSuccess, let outBuf = rotated else {
-            logger.warning("Frame \(self.frameIndex): pool buffer allocation failed (status=\(status)); falling back to un-rotated input")
-            return (rawBuffer, pts)
-        }
-
-        let oriented = CIImage(cvPixelBuffer: rawBuffer)
-            .transformed(by: preferredTransform)
-            .transformed(by: translationToOrigin)
-        ciContext.render(oriented, to: outBuf)
-
-        return (outBuf, pts)
+        return (pixelBuffer, pts)
     }
 
     var progress: Float {
@@ -200,10 +175,12 @@ final class VideoReader {
 
     enum VideoReaderError: Error, LocalizedError {
         case noVideoTrack
+        case compositionFailed
 
         var errorDescription: String? {
             switch self {
             case .noVideoTrack: return "No video track found in asset."
+            case .compositionFailed: return "Could not create a mutable composition track."
             }
         }
     }
