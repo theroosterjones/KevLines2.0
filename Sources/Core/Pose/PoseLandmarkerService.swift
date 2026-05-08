@@ -28,10 +28,23 @@ final class PoseLandmarkerService {
         setupLandmarker()
     }
 
-    /// Clears sampled failure counters so each saved-video run can log fresh samples (same service instance may be reused).
-    func resetSessionDiagnostics() {
+    /// Tears down the current PoseLandmarker and re-creates it before each saved-video run.
+    ///
+    /// MediaPipe video mode requires strictly monotonically increasing timestamps across
+    /// all `detect()` calls on the same instance. Re-using one instance across multiple
+    /// analyses causes every frame of the second run to be rejected (timestamps restart
+    /// from 0, which is less than the final timestamp of the previous run), producing
+    /// silent 0% detection. Re-creating the instance resets that internal counter.
+    ///
+    /// The model binary is already mapped into memory after the first init, so subsequent
+    /// inits are fast (no disk I/O).
+    func resetForNewSession() {
+        poseLandmarker = nil
+        setupLandmarker()
         mpImageFailureLogCount = 0
         detectFailureLogCount = 0
+        loggedNilLandmarker = false
+        AnalysisLog.pose.info("PoseLandmarker reset for new session")
     }
 
     // MARK: - Setup

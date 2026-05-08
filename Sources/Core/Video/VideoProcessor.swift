@@ -58,7 +58,7 @@ final class VideoProcessor: ObservableObject {
         let result: AnalysisSummary = try await Task.detached(priority: .userInitiated) {
             [poseLandmarker, overlayRenderer] in
 
-            poseLandmarker.resetSessionDiagnostics()
+            poseLandmarker.resetForNewSession()
 
             var allFrameResults: [FrameAnalysis] = []
             var poseDetections = 0
