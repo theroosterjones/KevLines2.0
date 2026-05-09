@@ -13,7 +13,7 @@ final class SquatAnalyzer: ExerciseAnalyzer {
     }
 
     private let smoother = LandmarkSmoother()
-    private let repCounter = RepCounter(extendedThreshold: 160, flexedThreshold: 100)
+    private let repCounter = RepCounter(extendedThreshold: 150, flexedThreshold: 100)
     private let tempoTracker = TempoTracker()
 
     /// Minimum per-landmark visibility the hip/knee/ankle chain must meet for the
@@ -47,6 +47,7 @@ final class SquatAnalyzer: ExerciseAnalyzer {
         let ear = landmarks.position(for: .ear(side))
             .map { smoother.smooth(key: "\(side)_ear", position: $0, timestamp: ts) }
 
+        let w_shoulder = landmarks.worldPosition(for: .shoulder(side)).map { smoother.smooth3D(key: "\(side)_shoulder", position: $0, timestamp: ts) }
         let w_hip   = landmarks.worldPosition(for: .hip(side))  .map { smoother.smooth3D(key: "\(side)_hip",   position: $0, timestamp: ts) }
         let w_knee  = landmarks.worldPosition(for: .knee(side)) .map { smoother.smooth3D(key: "\(side)_knee",  position: $0, timestamp: ts) }
         let w_ankle = landmarks.worldPosition(for: .ankle(side)).map { smoother.smooth3D(key: "\(side)_ankle", position: $0, timestamp: ts) }
@@ -106,9 +107,25 @@ final class SquatAnalyzer: ExerciseAnalyzer {
             instructions.append(.circle(at: shoulder, radius: 10, color: .yellow, filled: true))
         }
 
-        // Angle label
-        instructions.append(.text("Knee: \(AngleCalculator.displayDegrees(kneeAngle))",
+        // Hip angle (shoulder→hip→knee) — display only, no effect on rep/tempo logic
+        let hipAngle: Float?
+        if let ws = w_shoulder, let wh = w_hip, let wk = w_knee {
+            let a = AngleCalculator.angle3D(a: ws, b: wh, c: wk)
+            hipAngle = a.isFinite ? a : nil
+        } else if let s = shoulder {
+            let a = AngleCalculator.angle(a: s, b: hip, c: knee)
+            hipAngle = a.isFinite ? a : nil
+        } else {
+            hipAngle = nil
+        }
+
+        // Angle labels
+        instructions.append(.text("Knee: \(AngleCalculator.displayDegrees(kneeAngle))°",
             at: SIMD2(knee.x - 0.05, knee.y + 0.05), color: .white, size: 20))
+        if let hipAngle {
+            instructions.append(.text("Hip: \(AngleCalculator.displayDegrees(hipAngle))°",
+                at: SIMD2(hip.x + 0.02, hip.y - 0.04), color: .cyan, size: 18))
+        }
 
         // HUD
         instructions.append(.text("Reps: \(repCounter.count)",
