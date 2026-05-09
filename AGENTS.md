@@ -96,4 +96,4 @@ User-facing history lives in **[README.md — Changelog](README.md)**. Major mil
 | [PRIVACY.md](PRIVACY.md) | Privacy policy text |
 | [TESTFLIGHT_APPSTORE_NOTES.md](TESTFLIGHT_APPSTORE_NOTES.md) | Store / TestFlight copy |
 
-Last updated: aligned with **KevLines 3.3.2** (marketing) / build **9** per `project.yml`.
+Last updated: aligned with **KevLines 3.3.4** (marketing) / build **13** per `project.yml`.

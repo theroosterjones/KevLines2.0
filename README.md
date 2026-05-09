@@ -1,4 +1,4 @@
-# KevLines 3.3.2 — On-Device Exercise Form Analysis & Movement Assessment
+# KevLines 3.3.4 — On-Device Exercise Form Analysis & Movement Assessment
 
 A fully local iOS app that analyzes exercise videos and movement screens, overlaying biomechanical feedback (joint angles, skeleton, rep counts, tempo phases, letter-graded postural assessments) in real time using the device camera or saved videos. No server, no cloud, no network dependency.
 
@@ -14,6 +14,15 @@ A fully local iOS app that analyzes exercise videos and movement screens, overla
 **Saved-video orientation:** Do not change decode/export without reading **docs/VideoOrientation.md**. Use **`AVMutableVideoComposition` + `AVAssetReaderVideoCompositionOutput`** as in `VideoReader`—not ad-hoc Core Image + `preferredTransform` (upside-down / mirror / left–right bugs).
 
 ## Changelog
+
+### v3.3.4 — Squat rep counting fix, hip angle HUD, pose tracking diagnostic
+
+- **Squat extended threshold 160° → 150°** — the rep counter previously required the knee angle to exceed 160° at lockout to register "standing." Real-world side-profile footage (especially at a slight camera angle) typically reads 145–158° at full extension, causing most reps to be silently missed. The 150° threshold accommodates this without over-counting.
+- **Hip angle in squat overlay** — a "Hip: X°" label (shoulder→hip→knee, cyan) now appears next to the hip joint on every squat analysis frame. Uses 3D world landmarks when MediaPipe provides them, falls back to 2D. Display-only; no effect on rep counting or tempo.
+- **Pose tracking rate in results UI** — `AnalysisSummary` now carries `poseDetectionRate` (0–1). Both the exercise and assessment results cards show "Pose tracked: X% of frames" color-coded green/yellow/red. This surfaces the poseMiss rate directly in the app without requiring Xcode or Console.
+- **Fix: 0% pose detection on second+ analysis run** — `PoseLandmarkerService.resetForNewSession()` tears down and re-creates the `PoseLandmarker` instance before each saved-video run. MediaPipe's video mode requires strictly increasing timestamps; re-using one instance across multiple analyses caused every subsequent run to show 0% detection because video timestamps restart from 0.
+- **Deadlift camera tip** — setup guidance and low-tracking warning now advise filming at 15–30° off a strict side profile so the barbell doesn't occlude the hip and break person detection.
+- **Marketing / build** — `3.3.4` (13).
 
 ### v3.3.2 — Saved-video orientation (AVFoundation composition)
 - **`VideoReader` uses `AVMutableVideoComposition` + `AVAssetReaderVideoCompositionOutput`** — applies `preferredTransform` the same way as QuickTime / Photos / `AVPlayer`, then reads BGRA frames. Replaces hand-rolled Core Image transforms (which mixed CI vs pixel-buffer coordinate systems and caused upside-down, mirrored, or left/right–swapped video vs the source clip). Side selection and overlays again align with how the imported video appears in the library.
