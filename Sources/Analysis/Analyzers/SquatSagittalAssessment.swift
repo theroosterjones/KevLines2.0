@@ -87,7 +87,7 @@ final class SquatSagittalAssessment: AssessmentAnalyzer {
         worstTorsoLean = max(worstTorsoLean, torsoLean)
 
         let depthGrade = LetterGrade.gradeLowerIsBetter(value: kneeAngle, a: 80, b: 95, c: 110, d: 125)
-        let leanGrade  = leanGradeFor(torsoLean)
+        let leanGrade  = leanGradeFor(torsoLean, atKneeAngle: kneeAngle)
 
         let displayDepth = depthHysteresis.update(depthGrade)
         let displayLean  = leanHysteresis.update(leanGrade)
@@ -148,7 +148,7 @@ final class SquatSagittalAssessment: AssessmentAnalyzer {
 
     func currentMetrics() -> AssessmentMetrics {
         let depthGrade = LetterGrade.gradeLowerIsBetter(value: bestKneeAngle, a: 80, b: 95, c: 110, d: 125)
-        let leanGrade  = leanGradeFor(torsoLeanAtBestDepth)
+        let leanGrade  = leanGradeFor(torsoLeanAtBestDepth, atKneeAngle: bestKneeAngle)
         let overall    = max(depthGrade, leanGrade)
 
         var details: [String] = []
@@ -179,15 +179,19 @@ final class SquatSagittalAssessment: AssessmentAnalyzer {
         leanHysteresis  = GradeHysteresis()
     }
 
-    /// Squat torso lean is "graded toward a band": some forward lean is
-    /// expected and healthy, but excessive lean is a red flag for hip-mobility
-    /// limitations or a setup that loads the lower back.
-    /// - 0–25°: A (within ideal band for most squat styles)
-    /// - 26–35°: B
-    /// - 36–45°: C
-    /// - 46–55°: D
-    /// - 56°+:   F
-    private func leanGradeFor(_ degrees: Float) -> LetterGrade {
-        LetterGrade.gradeLowerIsBetter(value: degrees, a: 25, b: 35, c: 45, d: 55)
+    /// Grades torso lean from vertical, with context-aware thresholds based on squat depth.
+    ///
+    /// **Shallow / mid squat** (knee angle ≥ 90°):
+    /// - 0–25°: A  |  26–35°: B  |  36–45°: C  |  46–55°: D  |  56°+: F
+    ///
+    /// **Deep squat** (knee angle < 90°): greater forward lean is anatomically expected
+    /// due to hip/ankle mobility demands. Thresholds are more forgiving:
+    /// - 0–50°: A  |  51–60°: B  |  61–70°: C  |  71–80°: D  |  81°+: F
+    private func leanGradeFor(_ degrees: Float, atKneeAngle kneeAngle: Float) -> LetterGrade {
+        if kneeAngle < 90 {
+            return LetterGrade.gradeLowerIsBetter(value: degrees, a: 50, b: 60, c: 70, d: 80)
+        } else {
+            return LetterGrade.gradeLowerIsBetter(value: degrees, a: 25, b: 35, c: 45, d: 55)
+        }
     }
 }

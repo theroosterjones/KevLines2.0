@@ -1,4 +1,4 @@
-# KevLines 3.3.4 — On-Device Exercise Form Analysis & Movement Assessment
+# KevLines 3.3.5 — On-Device Exercise Form Analysis & Movement Assessment
 
 A fully local iOS app that analyzes exercise videos and movement screens, overlaying biomechanical feedback (joint angles, skeleton, rep counts, tempo phases, letter-graded postural assessments) in real time using the device camera or saved videos. No server, no cloud, no network dependency.
 
@@ -14,6 +14,13 @@ A fully local iOS app that analyzes exercise videos and movement screens, overla
 **Saved-video orientation:** Do not change decode/export without reading **docs/VideoOrientation.md**. Use **`AVMutableVideoComposition` + `AVAssetReaderVideoCompositionOutput`** as in `VideoReader`—not ad-hoc Core Image + `preferredTransform` (upside-down / mirror / left–right bugs).
 
 ## Changelog
+
+### v3.3.5 — Lunge hip angle, pause-bottom rounding, deep squat lean grading
+
+- **Hip angle in lunge overlay** — "Hip: X°" (shoulder→hip→knee, cyan) label added to the lunge exercise overlay. Uses 3D world landmarks with 2D fallback. Display-only; no effect on rep counting or tempo.
+- **Pause-at-bottom rounding** — the second number in the `ecc-pauseBottom-con-pauseTop` tempo string now rounds **down** (floor) instead of nearest across all exercises. A brief touch-and-go that measures 0.9 s no longer displays as 1. Applies to both completed-rep history and the in-progress live tempo readout.
+- **Squat sagittal assessment — depth-aware torso lean grading** — when the knee angle drops below 90° (deep squat), lean thresholds switch to a more forgiving band: ≤ 50° → A, 51–60° → B, 61–70° → C, 71–80° → D. The standard thresholds (≤ 25° → A) still apply for shallow squats. Depth and knee flexion grades are unaffected.
+- **Marketing / build** — `3.3.5` (14).
 
 ### v3.3.4 — Squat rep counting fix, hip angle HUD, pose tracking diagnostic
 

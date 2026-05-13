@@ -82,9 +82,21 @@ final class LungeAnalyzer: ExerciseAnalyzer {
         instructions.append(.circle(at: shoulder, radius: 10, color: .yellow, filled: true))
         instructions.append(.circle(at: ankle,    radius: 8,  color: .orange, filled: true))
 
+        // Hip angle (shoulder→hip→knee) — display only, no effect on rep/tempo logic
+        let hipAngle: Float
+        if let ws = w_shoulder, let wh = w_hip, let wk = w_knee {
+            hipAngle = AngleCalculator.angle3D(a: ws, b: wh, c: wk)
+        } else {
+            hipAngle = AngleCalculator.angle(a: shoulder, b: hip, c: knee)
+        }
+
         // Angle labels
         instructions.append(.text("Knee: \(AngleCalculator.displayDegrees(kneeAngle))\u{00B0}",
             at: SIMD2(knee.x + 0.02, knee.y - 0.04), color: .white, size: 20))
+        if hipAngle.isFinite {
+            instructions.append(.text("Hip: \(AngleCalculator.displayDegrees(hipAngle))\u{00B0}",
+                at: SIMD2(hip.x + 0.02, hip.y - 0.04), color: .cyan, size: 18))
+        }
         instructions.append(.text("Trunk: \(AngleCalculator.displayDegrees(trunkAngle))\u{00B0}",
             at: SIMD2(0.02, 0.17), color: .cyan, size: 18))
 
