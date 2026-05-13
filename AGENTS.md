@@ -81,9 +81,51 @@ Full rationale and history: **[docs/VideoOrientation.md](docs/VideoOrientation.m
 - Changing `VideoReader` without reading **docs/VideoOrientation.md** first.
 - Forgetting **`xcodegen generate`** after `project.yml` changes.
 
+### MediaPipe timestamp reset (critical — do not regress)
+
+`PoseLandmarkerService` runs in `.video` mode which requires **strictly increasing timestamps** across all `detect()` calls on the same instance. `VideoProcessor` is a `@StateObject` that lives for the entire app session. Every new analysis must call **`poseLandmarker.resetForNewSession()`** (which destroys and re-creates the `PoseLandmarker` instance) before the read loop begins. Skipping this causes 0% pose detection on every analysis after the first.
+
+### Pose tracking rate diagnostic
+
+`AnalysisSummary.poseDetectionRate` (Float 0–1) is computed in `VideoProcessor` and surfaced in the results UI as "Pose tracked: X% of frames". Green ≥ 70%, yellow 40–69%, red < 40%. Blank overlays with a low tracking rate = `poseMiss` (MediaPipe not detecting a person); blank overlays with a high tracking rate = `poseOkEmptyOverlay` (analyzer guard failing despite detection).
+
+### Rep counting conventions
+
+- Standard analyzers use **`RepCounter(extendedThreshold:flexedThreshold:)`** — a simple state machine driven by a joint angle. Larger angle = extended.
+- **`HipHingeBackAnalyzer`** uses a **self-calibrating trunk-height signal** (`hipMid.y − shoulderMid.y`) because the hinge is a depth-axis movement invisible as a 2D angle from behind. Dynamic 65%/35% thresholds bootstrap counting; they lock to the avg of the first 3 reps' observed extremes.
+- `RepCounter.extendedThreshold` for Squat is **150°** (not 160°) to accommodate real-world camera angles where lockout reads 145–158°.
+
+### Pause-at-bottom tempo rounding
+
+`RepMetric.tempoString` and `RepMetricsCollector.currentTempoString()` use **`.rounded(.down)` for the pause-bottom slot only** (the 2nd number). All other phases use nearest rounding. This prevents a 0.9 s touch-and-go from inflating to "1".
+
+### Exercise library (current)
+
+| Type | Analyzer | View | Notes |
+|------|----------|------|-------|
+| Squat | `SquatAnalyzer` | Side | Hip angle added to HUD (display-only) |
+| Deadlift | `DeadliftAnalyzer` | Side | Film 15–30° off strict side to avoid bar-over-hip occlusion |
+| Lunge | `LungeAnalyzer` | Side | Hip angle added to HUD (display-only) |
+| Hip Hinge (Side) | `HipHingeSideAnalyzer` | Side | |
+| Hip Hinge (Back) | `HipHingeBackAnalyzer` | Rear | Self-calibrating rep count & tempo |
+| Barbell Row | `RowAnalyzer` | Side | Auto-side fallback |
+| Lat Pulldown/Chin Up (Side) | `LatPulldownAnalyzer` | Side | |
+| Lat Pulldown/Chin Up (Front) | `LatPulldownFrontAnalyzer` | Front/Back | Bilateral, no side select |
+| Overhead Press | `OverheadPressAnalyzer` | Front/Back | Bilateral |
+| Elbow (Bicep/Tricep) | `ElbowAnalyzer` | Side | |
+| Shoulder Assessment | `ShoulderAnalyzer` | Front/Back | |
+
+### Assessment library (current)
+
+| Type | Planes | Notes |
+|------|--------|-------|
+| Shoulder Flexion | Frontal, Sagittal | |
+| Squat Assessment | Frontal, Sagittal | Sagittal uses depth-aware lean grading (< 90° knee angle = more forgiving thresholds) |
+| Hip Hinge Assessment | Frontal, Sagittal | |
+
 ## Changelog & product history
 
-User-facing history lives in **[README.md — Changelog](README.md)**. Major milestones: on-device 2.0, live Metal + 3D + 1€ filter 2.1, exercise expansion 2.3, assessments + HUD 3.0, plane-aware assessments 3.2, **video composition decode 3.3.2**.
+User-facing history lives in **[README.md — Changelog](README.md)**. Major milestones: on-device 2.0, live Metal + 3D + 1€ filter 2.1, exercise expansion 2.3, assessments + HUD 3.0, plane-aware assessments 3.2, video composition decode 3.3.2, stability + diagnostics 3.3.3–3.3.4, analyzer improvements 3.3.5–3.3.7.
 
 ## Related docs
 
