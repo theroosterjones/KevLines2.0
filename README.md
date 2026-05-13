@@ -1,4 +1,4 @@
-# KevLines 3.3.6 — On-Device Exercise Form Analysis & Movement Assessment
+# KevLines 3.3.7 — On-Device Exercise Form Analysis & Movement Assessment
 
 A fully local iOS app that analyzes exercise videos and movement screens, overlaying biomechanical feedback (joint angles, skeleton, rep counts, tempo phases, letter-graded postural assessments) in real time using the device camera or saved videos. No server, no cloud, no network dependency.
 
@@ -14,6 +14,13 @@ A fully local iOS app that analyzes exercise videos and movement screens, overla
 **Saved-video orientation:** Do not change decode/export without reading **docs/VideoOrientation.md**. Use **`AVMutableVideoComposition` + `AVAssetReaderVideoCompositionOutput`** as in `VideoReader`—not ad-hoc Core Image + `preferredTransform` (upside-down / mirror / left–right bugs).
 
 ## Changelog
+
+### v3.3.7 — Hip Hinge (Back) self-calibrating rep counting & tempo
+
+- **Self-calibrating rep counter** added to `HipHingeBackAnalyzer`. From the back view, the hinge is a depth-axis movement that doesn't produce a clean 2D angle. The analyzer uses `hipMid.y − shoulderMid.y` (trunk height, larger when standing) as the rep signal. Initial thresholds are set dynamically at 65%/35% of the running observed range. After 3 completed reps, the counter locks precise thresholds based on the average of those 3 reps' actual top and bottom positions — accommodating any filming distance or body proportion.
+- **Tempo tracking** wired to the same trunk-height signal (scaled × 100 to give the TempoTracker meaningful velocity units). Eccentric = hinging forward (signal decreasing), concentric = returning to stand (signal increasing). Uses lower velocity thresholds (8.0/4.0) tuned to the slower, larger-range hinge pattern.
+- **HUD updated**: shows Reps, a "Calibrating…" / "Tracking" status indicator (orange until 3 reps lock the thresholds, then green), and the existing hip tilt, shoulder tilt, and knee tracking rows shifted down to make room.
+- **Marketing / build** — `3.3.7` (16).
 
 ### v3.3.6 — Lat Pulldown/Chin Up front view, exercise renamed
 
