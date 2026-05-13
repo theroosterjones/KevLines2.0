@@ -1,4 +1,4 @@
-# KevLines 3.3.5 — On-Device Exercise Form Analysis & Movement Assessment
+# KevLines 3.3.6 — On-Device Exercise Form Analysis & Movement Assessment
 
 A fully local iOS app that analyzes exercise videos and movement screens, overlaying biomechanical feedback (joint angles, skeleton, rep counts, tempo phases, letter-graded postural assessments) in real time using the device camera or saved videos. No server, no cloud, no network dependency.
 
@@ -14,6 +14,12 @@ A fully local iOS app that analyzes exercise videos and movement screens, overla
 **Saved-video orientation:** Do not change decode/export without reading **docs/VideoOrientation.md**. Use **`AVMutableVideoComposition` + `AVAssetReaderVideoCompositionOutput`** as in `VideoReader`—not ad-hoc Core Image + `preferredTransform` (upside-down / mirror / left–right bugs).
 
 ## Changelog
+
+### v3.3.6 — Lat Pulldown/Chin Up front view, exercise renamed
+
+- **New exercise: Lat Pulldown/Chin Up (Front)** — bilateral front/back-view analyzer (`LatPulldownFrontAnalyzer`). Tracks both elbow angles (shoulder→elbow→wrist) and both shoulder angles (hip→shoulder→elbow) independently. Rep counting driven by average elbow angle (extended 150°, flexed 90°). Overlay includes spine midline, shoulder girdle, hip baseline, bilateral arm skeletons, extended forearm lines toward the bar, and per-side elbow + shoulder angle labels. No side selection required.
+- **Renamed: "Lat Pulldown" → "Lat Pulldown/Chin Up (Side)"** — the existing side-profile analyzer is unchanged; only the display name is updated to clarify it covers both lat pulldown and chin-up mechanics from the side.
+- **Marketing / build** — `3.3.6` (15).
 
 ### v3.3.5 — Lunge hip angle, pause-bottom rounding, deep squat lean grading
 

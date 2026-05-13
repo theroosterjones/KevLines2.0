@@ -17,6 +17,7 @@ struct ExerciseConfig {
         case .hipHingeBack:       return HipHingeBackAnalyzer(side: side)
         case .row:                return RowAnalyzer(side: side)
         case .latPulldown:        return LatPulldownAnalyzer(side: side)
+        case .latPulldownFront:   return LatPulldownFrontAnalyzer(side: side)
         case .overheadPress:      return OverheadPressAnalyzer(side: side)
         case .elbowCurl:          return ElbowAnalyzer(side: side)
         case .shoulderAssessment: return ShoulderAnalyzer(side: side)
@@ -36,8 +37,10 @@ struct ExerciseConfig {
                        requiresSideSelection: false, defaultSide: .left),
         ExerciseConfig(type: .row,                displayName: "Barbell Row",
                        requiresSideSelection: true,  defaultSide: .left),
-        ExerciseConfig(type: .latPulldown,        displayName: "Lat Pulldown",
+        ExerciseConfig(type: .latPulldown,        displayName: "Lat Pulldown/Chin Up (Side)",
                        requiresSideSelection: true,  defaultSide: .left),
+        ExerciseConfig(type: .latPulldownFront,   displayName: "Lat Pulldown/Chin Up (Front)",
+                       requiresSideSelection: false, defaultSide: .left),
         ExerciseConfig(type: .overheadPress,      displayName: "Overhead Press",
                        requiresSideSelection: false, defaultSide: .left),
         ExerciseConfig(type: .elbowCurl,          displayName: "Elbow (Bicep/Tricep)",
@@ -119,6 +122,8 @@ extension ExerciseType {
             return "Film at a slight forward angle (15–30° off true side) so the barbell doesn't block your hip. Keep shoulder, hip, knee, and ankle all visible."
         case .row, .latPulldown, .elbowCurl:
             return "Use a strict side profile (about 90°). Keep the full working side visible from shoulder to ankle."
+        case .latPulldownFront:
+            return "Film from directly in front of or behind the cable stack / pull-up bar. Keep both arms and both hips fully visible throughout the set."
         case .overheadPress:
             return "Use a front or back profile. Keep both arms and hips fully visible in frame throughout the lift."
         case .hipHingeBack:
@@ -137,6 +142,8 @@ extension ExerciseType {
             return "Tracking lost — the barbell may be blocking your hip. Try a slight forward angle (15–30° off the side) and ensure shoulder, hip, knee, and ankle are all visible."
         case .row, .latPulldown, .elbowCurl:
             return "Tracking is unstable. Reposition camera to a strict side profile and keep your full body in frame."
+        case .latPulldownFront:
+            return "Tracking is unstable. Film from directly in front of or behind the bar and ensure both arms and hips stay within the camera frame."
         case .overheadPress:
             return "Tracking is unstable. Use a front or back profile and ensure both arms stay within the camera frame."
         case .hipHingeBack:

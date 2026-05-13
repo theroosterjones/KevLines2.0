@@ -11,6 +11,7 @@ enum ExerciseType: String, CaseIterable, Identifiable, Codable {
     case hipHingeBack = "Hip Hinge (Back)"
     case row = "Row"
     case latPulldown = "Lat Pulldown"
+    case latPulldownFront = "Lat Pulldown (Front)"
     case overheadPress = "Overhead Press"
     case elbowCurl = "Elbow (Bicep/Tricep)"
     case shoulderAssessment = "Shoulder Assessment"

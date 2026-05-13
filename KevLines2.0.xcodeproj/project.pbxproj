@@ -39,6 +39,7 @@
 		AD8F372A84B695232C46E01E /* LandmarkSmoother.swift in Sources */ = {isa = PBXBuildFile; fileRef = 776A9C2FB7F6F4108B6790F4 /* LandmarkSmoother.swift */; };
 		B05300B5846CD89AAE55C9D5 /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD774CC33747AEBBC54D54C /* VideoProcessor.swift */; };
 		B2B64A40ABB0A51B2E23E338 /* HipHingeAssessmentAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A77E5CB865AE14922A62582 /* HipHingeAssessmentAnalyzer.swift */; };
+		B408E46F20458D53153C7611 /* LatPulldownFrontAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EAD30CA9945615CD8A99A85 /* LatPulldownFrontAnalyzer.swift */; };
 		B47E7AC8C508ADF39308F44A /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7270CA7BAEEE484B50F60704 /* CameraService.swift */; };
 		C43A8BB0F6B5D254BD9920C8 /* ShoulderFlexionSagittalAssessment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0286C0E5C7D5ACC309F9A855 /* ShoulderFlexionSagittalAssessment.swift */; };
 		C65365314CC643DD871ADD8D /* ExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA949C722622B3B489370A7A /* ExerciseView.swift */; };
@@ -98,6 +99,7 @@
 		7A002C046D3D3F05C9464F9A /* RepMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepMetrics.swift; sourceTree = "<group>"; };
 		7C32D18EB4D8B9453C9BF056 /* LatPulldownAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatPulldownAnalyzer.swift; sourceTree = "<group>"; };
 		7E8D7227809F7AAC2B6B978E /* KevLines2App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KevLines2App.swift; sourceTree = "<group>"; };
+		7EAD30CA9945615CD8A99A85 /* LatPulldownFrontAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatPulldownFrontAnalyzer.swift; sourceTree = "<group>"; };
 		8293F702B27BE46ECC67C9B8 /* WorkoutHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutHistoryView.swift; sourceTree = "<group>"; };
 		853287EEA68FF7813F005490 /* AngleCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AngleCalculator.swift; sourceTree = "<group>"; };
 		861347630F4185FB437966F8 /* ElbowAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElbowAnalyzer.swift; sourceTree = "<group>"; };
@@ -149,6 +151,7 @@
 				5263D166C3B0C303BAC8F80C /* HipHingeFrontalAssessment.swift */,
 				C58FEA92B3E558974E7739C1 /* HipHingeSideAnalyzer.swift */,
 				7C32D18EB4D8B9453C9BF056 /* LatPulldownAnalyzer.swift */,
+				7EAD30CA9945615CD8A99A85 /* LatPulldownFrontAnalyzer.swift */,
 				7104A36B6142C427F26FDBE0 /* LungeAnalyzer.swift */,
 				5F29D8FC737F983B66562392 /* OverheadPressAnalyzer.swift */,
 				CAB6C3ABA6C589A5A6AC5DCF /* RowAnalyzer.swift */,
@@ -479,6 +482,7 @@
 				AD8F372A84B695232C46E01E /* LandmarkSmoother.swift in Sources */,
 				12BCD0356FB1F3BDE689AE3B /* LandmarkTypes.swift in Sources */,
 				D3EBDFA85E87B597ACB0EC31 /* LatPulldownAnalyzer.swift in Sources */,
+				B408E46F20458D53153C7611 /* LatPulldownFrontAnalyzer.swift in Sources */,
 				9FA423A5D9128B2EA5F99855 /* LiveAnalysisView.swift in Sources */,
 				69F3FB9089120D75924D25F2 /* LiveVideoRecorder.swift in Sources */,
 				CDC2ECFBDF791BE0E9C1ABF4 /* LungeAnalyzer.swift in Sources */,
@@ -534,7 +538,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 15;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = KevLines;
 				INFOPLIST_KEY_NSCameraUsageDescription = "KevLines uses your camera for real-time exercise form analysis with skeleton overlay.";
@@ -546,7 +550,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.5;
+				MARKETING_VERSION = 3.3.6;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kevinjones.KevLines2-0";
 				PRODUCT_MODULE_NAME = KevLines2_0;
 				PRODUCT_NAME = KevLines2.0;
@@ -716,7 +720,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 15;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = KevLines;
 				INFOPLIST_KEY_NSCameraUsageDescription = "KevLines uses your camera for real-time exercise form analysis with skeleton overlay.";
@@ -728,7 +732,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.5;
+				MARKETING_VERSION = 3.3.6;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kevinjones.KevLines2-0";
 				PRODUCT_MODULE_NAME = KevLines2_0;
 				PRODUCT_NAME = KevLines2.0;
