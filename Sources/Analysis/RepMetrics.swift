@@ -14,11 +14,10 @@ struct RepMetric: Codable {
     }
 
     /// Formatted tempo string (e.g. "3-1-2-1").
-    /// Pause-bottom rounds DOWN (floor) so a brief touch-and-go pause never inflates
-    /// to 1. Any pause under ~1 s displays as 0. The other three phases use nearest
-    /// rounding, which is acceptable for longer eccentric/concentric durations.
+    /// All four phases round DOWN (floor) so durations are never overstated.
+    /// A 3.4 s eccentric reads as 3, a 0.9 s pause reads as 0.
     var tempoString: String {
-        "\(Int(eccentricDuration.rounded()))-\(Int(pauseBottomDuration.rounded(.down)))-\(Int(concentricDuration.rounded()))-\(Int(pauseTopDuration.rounded()))"
+        "\(Int(eccentricDuration.rounded(.down)))-\(Int(pauseBottomDuration.rounded(.down)))-\(Int(concentricDuration.rounded(.down)))-\(Int(pauseTopDuration.rounded(.down)))"
     }
 }
 
@@ -110,10 +109,10 @@ final class RepMetricsCollector {
     }
 
     /// Current in-progress tempo as a formatted string (e.g. "3-1-2-0").
-    /// Pause-bottom uses floor rounding, matching `RepMetric.tempoString`.
+    /// All four phases use floor rounding, matching `RepMetric.tempoString`.
     func currentTempoString() -> String {
         guard let t = currentTempo() else { return "--" }
-        return "\(Int(t.ecc.rounded()))-\(Int(t.pauseB.rounded(.down)))-\(Int(t.con.rounded()))-\(Int(t.pauseT.rounded()))"
+        return "\(Int(t.ecc.rounded(.down)))-\(Int(t.pauseB.rounded(.down)))-\(Int(t.con.rounded(.down)))-\(Int(t.pauseT.rounded(.down)))"
     }
 
     // MARK: - Scoring

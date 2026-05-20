@@ -26,6 +26,7 @@ A fully local iOS app that analyzes exercise videos and movement screens, overla
   - Exercises unaffected (correct before): Squat, Deadlift, Lunge, Hip Hinge, Overhead Press (joint *opens* on concentric for all).
 - **Lat pulldown flexed threshold** — lowered from 90° → 80° on both side and front variants to better capture full ROM pull-to-chest.
 - **Row flexed threshold** — lowered from 100° → 90° to match typical full-ROM elbow position at the top of a row.
+- **Tempo rounding — all four phases now floor** — previously only pause-bottom used floor rounding; eccentric, concentric, and pause-top used nearest rounding (causing 3.4 s to display as 4). All four slots now round down so tempo numbers are never overstated (3.4 s → 3, 0.9 s → 0).
 - **Marketing / build** — `3.3.8` (17).
 
 ### v3.3.7 — Hip Hinge (Back) self-calibrating rep counting & tempo
