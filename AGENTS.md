@@ -107,9 +107,9 @@ Full rationale and history: **[docs/VideoOrientation.md](docs/VideoOrientation.m
 
 The pause phases (`pauseBottom` / `pauseTop`) track `lastMovingPhase` and are always correct regardless of this flag.
 
-### Pause-at-bottom tempo rounding
+### Tempo rounding
 
-`RepMetric.tempoString` and `RepMetricsCollector.currentTempoString()` use **`.rounded(.down)` for the pause-bottom slot only** (the 2nd number). All other phases use nearest rounding. This prevents a 0.9 s touch-and-go from inflating to "1".
+`RepMetric.tempoString` and `RepMetricsCollector.currentTempoString()` use **`.rounded(.down)` for all four slots** (since v3.3.8). A 3.4 s eccentric displays as 3; a 0.9 s pause displays as 0. Durations are never overstated.
 
 ### Exercise library (current)
 
@@ -120,11 +120,11 @@ The pause phases (`pauseBottom` / `pauseTop`) track `lastMovingPhase` and are al
 | Lunge | `LungeAnalyzer` | Side | Hip angle added to HUD (display-only) |
 | Hip Hinge (Side) | `HipHingeSideAnalyzer` | Side | |
 | Hip Hinge (Back) | `HipHingeBackAnalyzer` | Rear | Self-calibrating rep count & tempo |
-| Barbell Row | `RowAnalyzer` | Side | Auto-side fallback |
-| Lat Pulldown/Chin Up (Side) | `LatPulldownAnalyzer` | Side | |
-| Lat Pulldown/Chin Up (Front) | `LatPulldownFrontAnalyzer` | Front/Back | Bilateral, no side select |
+| Barbell Row | `RowAnalyzer` | Side | Auto-side fallback; invertPhases: true |
+| Lat Pulldown/Chin Up (Side) | `LatPulldownAnalyzer` | Side | invertPhases: true |
+| Lat Pulldown/Chin Up (Front) | `LatPulldownFrontAnalyzer` | Front/Back | Bilateral, no side select; invertPhases: true |
 | Overhead Press | `OverheadPressAnalyzer` | Front/Back | Bilateral |
-| Elbow (Bicep/Tricep) | `ElbowAnalyzer` | Side | |
+| Elbow (Bicep/Tricep) | `ElbowAnalyzer` | Side | extendedThreshold 140° (not 155°); invertPhases: true |
 | Shoulder Assessment | `ShoulderAnalyzer` | Front/Back | |
 
 ### Assessment library (current)
@@ -151,3 +151,9 @@ User-facing history lives in **[README.md — Changelog](README.md)**. Major mil
 | [TESTFLIGHT_APPSTORE_NOTES.md](TESTFLIGHT_APPSTORE_NOTES.md) | Store / TestFlight copy |
 
 Last updated: aligned with **KevLines 3.3.8** (marketing) / build **17** per `project.yml`.
+
+## Open testing notes (v3.3.8)
+
+- **Elbow curl rep counting** — threshold lowered to 140°; test confirms 0-rep bug resolved.
+- **Eccentric/concentric labels** — verify curl, row, and lat pulldown now show "concentric" during the working phase and "eccentric" during the release.
+- **Tempo floor rounding** — all four phases floor; 3.4 s → 3, 0.9 s → 0. Verify no rounding-up in any exercise.
