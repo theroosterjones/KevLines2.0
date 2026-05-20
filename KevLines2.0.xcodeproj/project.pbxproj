@@ -110,8 +110,8 @@
 		9E7DC1A7735FA6E24AB4D899 /* ExerciseAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseAnalyzer.swift; sourceTree = "<group>"; };
 		9E8CA3F88E5CF25D998A6DAA /* SquatAssessmentAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SquatAssessmentAnalyzer.swift; sourceTree = "<group>"; };
 		9F155EB38F803275CC0AF70D /* TempoTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoTracker.swift; sourceTree = "<group>"; };
-		A376ABE354BD8457CEB30C65 /* pose_landmarker_full.task */ = {isa = PBXFileReference; lastKnownFileType = file; path = pose_landmarker_full.task; sourceTree = "<group>"; };
-		A6399B585A07C22BB7EDD5B7 /* KevLines2.0.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KevLines2.0.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A376ABE354BD8457CEB30C65 /* pose_landmarker_full.task */ = {isa = PBXFileReference; path = pose_landmarker_full.task; sourceTree = "<group>"; };
+		A6399B585A07C22BB7EDD5B7 /* KevLines2.0.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = KevLines2.0.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A90354545ABE21C88DD4714B /* PoseLandmarkerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoseLandmarkerService.swift; sourceTree = "<group>"; };
 		AA949C722622B3B489370A7A /* ExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseView.swift; sourceTree = "<group>"; };
 		AAC19F3EC3EFC6E5979BF922 /* Exercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exercise.swift; sourceTree = "<group>"; };
@@ -380,6 +380,8 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+				};
 			};
 			buildConfigurationList = 399DE41446C632310A446ACC /* Build configuration list for PBXProject "KevLines2.0" */;
 			developmentRegion = en;
@@ -536,8 +538,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 16;
-				DEVELOPMENT_TEAM = YCKQ2HTCQ3;
+				CURRENT_PROJECT_VERSION = 17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = KevLines;
 				INFOPLIST_KEY_NSCameraUsageDescription = "KevLines uses your camera for real-time exercise form analysis with skeleton overlay.";
@@ -549,7 +550,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.7;
+				MARKETING_VERSION = 3.3.8;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kevinjones.KevLines2-0";
 				PRODUCT_MODULE_NAME = KevLines2_0;
 				PRODUCT_NAME = KevLines2.0;
@@ -719,8 +720,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 16;
-				DEVELOPMENT_TEAM = YCKQ2HTCQ3;
+				CURRENT_PROJECT_VERSION = 17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = KevLines;
 				INFOPLIST_KEY_NSCameraUsageDescription = "KevLines uses your camera for real-time exercise form analysis with skeleton overlay.";
@@ -732,7 +732,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.7;
+				MARKETING_VERSION = 3.3.8;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kevinjones.KevLines2-0";
 				PRODUCT_MODULE_NAME = KevLines2_0;
 				PRODUCT_NAME = KevLines2.0;

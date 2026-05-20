@@ -18,8 +18,9 @@ final class RowAnalyzer: ExerciseAnalyzer {
     }
 
     private let smoother = LandmarkSmoother()
-    private let repCounter = RepCounter(extendedThreshold: 150, flexedThreshold: 100)
-    private let tempoTracker = TempoTracker()
+    // invertPhases: true — rowing (pulling elbow back) closes the joint (angle ↓) = concentric.
+    private let repCounter = RepCounter(extendedThreshold: 150, flexedThreshold: 90)
+    private let tempoTracker = TempoTracker(invertPhases: true)
 
     init(side: BodySide) {
         self.side = side

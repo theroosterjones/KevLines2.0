@@ -102,7 +102,7 @@ struct ExerciseView: View {
                 }
                 .padding(.bottom, 40)
             }
-            .navigationTitle("KevLines 3.3.2")
+            .navigationTitle("KevLines 3.3.8")
             .alert("Error", isPresented: $showingError) {
                 Button("OK") { }
             } message: {

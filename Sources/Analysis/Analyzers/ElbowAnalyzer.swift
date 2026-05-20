@@ -14,8 +14,12 @@ final class ElbowAnalyzer: ExerciseAnalyzer {
     }
 
     private let smoother = LandmarkSmoother()
-    private let repCounter = RepCounter(extendedThreshold: 155, flexedThreshold: 60)
-    private let tempoTracker = TempoTracker()
+    // Extended threshold lowered to 140: world-landmark elbow angle at full arm extension
+    // typically reads 140–158°, so 155 caused the counter to get permanently stuck in
+    // .flexed after the first curl and count 0 reps.
+    // invertPhases: true because curling UP closes the elbow (angle ↓) = concentric.
+    private let repCounter = RepCounter(extendedThreshold: 140, flexedThreshold: 55)
+    private let tempoTracker = TempoTracker(invertPhases: true)
 
     init(side: BodySide) {
         self.side = side

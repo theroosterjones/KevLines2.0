@@ -94,6 +94,18 @@ Full rationale and history: **[docs/VideoOrientation.md](docs/VideoOrientation.m
 - Standard analyzers use **`RepCounter(extendedThreshold:flexedThreshold:)`** — a simple state machine driven by a joint angle. Larger angle = extended.
 - **`HipHingeBackAnalyzer`** uses a **self-calibrating trunk-height signal** (`hipMid.y − shoulderMid.y`) because the hinge is a depth-axis movement invisible as a 2D angle from behind. Dynamic 65%/35% thresholds bootstrap counting; they lock to the avg of the first 3 reps' observed extremes.
 - `RepCounter.extendedThreshold` for Squat is **150°** (not 160°) to accommodate real-world camera angles where lockout reads 145–158°.
+- `RepCounter.extendedThreshold` for `ElbowAnalyzer` is **140°** (not 155°). At full arm extension, 3D world-landmark elbow angle reads 140–155°; 155° caused permanent `.flexed` lock → 0 reps.
+
+### TempoTracker phase direction
+
+`TempoTracker` has an `invertPhases: Bool` parameter (default `false`).
+
+| Value | Angle ↓ (joint closes) | Angle ↑ (joint opens) | Use for |
+|-------|------------------------|----------------------|---------|
+| `false` | eccentric | concentric | Squat, Deadlift, Lunge, Hip Hinge, OHP |
+| `true` | **concentric** | **eccentric** | Elbow Curl, Row, Lat Pulldown |
+
+The pause phases (`pauseBottom` / `pauseTop`) track `lastMovingPhase` and are always correct regardless of this flag.
 
 ### Pause-at-bottom tempo rounding
 
@@ -138,4 +150,4 @@ User-facing history lives in **[README.md — Changelog](README.md)**. Major mil
 | [PRIVACY.md](PRIVACY.md) | Privacy policy text |
 | [TESTFLIGHT_APPSTORE_NOTES.md](TESTFLIGHT_APPSTORE_NOTES.md) | Store / TestFlight copy |
 
-Last updated: aligned with **KevLines 3.3.7** (marketing) / build **16** per `project.yml`.
+Last updated: aligned with **KevLines 3.3.8** (marketing) / build **17** per `project.yml`.

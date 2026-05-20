@@ -13,8 +13,9 @@ final class LatPulldownAnalyzer: ExerciseAnalyzer {
     }
 
     private let smoother = LandmarkSmoother()
-    private let repCounter = RepCounter(extendedThreshold: 150, flexedThreshold: 90)
-    private let tempoTracker = TempoTracker()
+    // invertPhases: true — pulling bar down closes the elbow (angle ↓) = concentric.
+    private let repCounter = RepCounter(extendedThreshold: 150, flexedThreshold: 80)
+    private let tempoTracker = TempoTracker(invertPhases: true)
 
     init(side: BodySide) {
         self.side = side

@@ -15,6 +15,19 @@ A fully local iOS app that analyzes exercise videos and movement screens, overla
 
 ## Changelog
 
+### v3.3.8 — Rep counting & tempo direction fixes for pull/curl exercises
+
+- **Fix: Elbow/Bicep curl counted 0 reps** — `RepCounter.extendedThreshold` for `ElbowAnalyzer` lowered from 155° → 140°. MediaPipe's 3D world landmarks report elbow angle at full arm extension as 140–155°, so the 155° threshold caused the counter to get permanently stuck in `.flexed` state after the first curl and never count again. `flexedThreshold` also tightened to 55° so partial curls don't count as reps.
+- **Fix: Eccentric/concentric direction inverted for curl, row, and lat pulldown** — `TempoTracker` now accepts `invertPhases: Bool`. When `true`, the phase names flip so that "angle decreasing = concentric" (the joint *closes* during the working phase). Previously, the app labeled pulling/curling as "eccentric" and the lowering/release phase as "concentric" — the exact opposite of exercise science convention. Affected analyzers: `ElbowAnalyzer`, `RowAnalyzer`, `LatPulldownAnalyzer`, `LatPulldownFrontAnalyzer`.
+  - **Correct convention after this fix:**
+    - Bicep curl: curling up (elbow closes) = **concentric**, lowering (elbow opens) = **eccentric**
+    - Row: pulling elbow back (elbow closes) = **concentric**, extending (elbow opens) = **eccentric**
+    - Lat Pulldown/Chin Up: pulling bar down (elbow closes) = **concentric**, releasing up (elbow opens) = **eccentric**
+  - Exercises unaffected (correct before): Squat, Deadlift, Lunge, Hip Hinge, Overhead Press (joint *opens* on concentric for all).
+- **Lat pulldown flexed threshold** — lowered from 90° → 80° on both side and front variants to better capture full ROM pull-to-chest.
+- **Row flexed threshold** — lowered from 100° → 90° to match typical full-ROM elbow position at the top of a row.
+- **Marketing / build** — `3.3.8` (17).
+
 ### v3.3.7 — Hip Hinge (Back) self-calibrating rep counting & tempo
 
 - **Self-calibrating rep counter** added to `HipHingeBackAnalyzer`. From the back view, the hinge is a depth-axis movement that doesn't produce a clean 2D angle. The analyzer uses `hipMid.y − shoulderMid.y` (trunk height, larger when standing) as the rep signal. Initial thresholds are set dynamically at 65%/35% of the running observed range. After 3 completed reps, the counter locks precise thresholds based on the average of those 3 reps' actual top and bottom positions — accommodating any filming distance or body proportion.
